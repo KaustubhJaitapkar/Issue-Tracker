@@ -108,6 +108,8 @@ function History(issues) {
   const handleAcknowledge = async (taskId) => {
     const accessToken = localStorage.getItem('accessToken');
 
+    console.log('Task ID:', taskId);
+    
     try {
       await axios.post('http://localhost:8000/api/v1/users/acknowledge-time', {
         responseId: taskId
@@ -156,16 +158,17 @@ function History(issues) {
                 {toResolvetasks.length > 0 ? (
                   <ul className="space-y-4 max-sm:space-y-2">
                     {toResolvetasks.map((task) => (
-                      <li key={task._id} className="bg-gray-100 p-4 rounded-lg shadow max-sm:p-2">
+                      <li key={task.id} className="bg-gray-100 p-4 rounded-lg shadow max-sm:p-2">
                         <div className="flex justify-between items-center max-sm:flex-col">
                           <div className="text-left max-sm:mb-2">
                             <h4 className="font-semibold text-lg max-sm:text-base text-left ">Problem: {task.issue}</h4>
                             <p className="text-gray-600 max-sm:text-sm text-left">Description: {task.description}</p>
                             <p className="text-gray-600 max-sm:text-sm text-left">Address: {task.address}</p>
+                            {/* <p>{task.acknowledge_at}</p> */}
                           </div>
-                          {(task.acknowledge_at == "") && (
+                          {(task.acknowledge_at === null) && (
                               <button
-                                onClick={() => handleAcknowledge(task._id)}
+                                onClick={() => handleAcknowledge(task.id)}
                                 className="bg-green-500 text-white text-base px-4 py-2 rounded-lg hover:bg-green-600 max-sm:px-2 max-sm:py-1 "
                               >
                                 Acknowledge
@@ -190,14 +193,14 @@ function History(issues) {
                 {tasks.length > 0 ? (
                   <ul className="space-y-4 max-sm:space-y-2">
                     {tasks.map((task) => (
-                      <li key={task._id} className="bg-gray-100 p-4 rounded-lg shadow max-sm:p-2">
+                      <li key={task.id} className="bg-gray-100 p-4 rounded-lg shadow max-sm:p-2">
                         <div className="flex justify-between items-center max-sm:flex-col">
                           <div className="max-sm:mb-2">
                             <h4 className="font-semibold text-lg max-sm:text-base text-left">Task: {task.issue}</h4>
                             <p className="text-gray-600 max-sm:text-sm text-left ">Description: {task.description}</p>
                           </div>
                           <button
-                            onClick={() => handleComplete(task._id)}
+                            onClick={() => handleComplete(task.id)}
                             className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 max-sm:px-2 max-sm:py-1"
                           >
                             Completed

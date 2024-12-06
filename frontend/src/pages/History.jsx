@@ -150,6 +150,7 @@ function History(issues) {
           <div className="flex flex-col lg:flex-row lg:space-x-6 justify-center items-start">
 
             {/* Issues to be Resolved */}
+            {toResolvetasks.length > 0 &&
             <div className="lg:w-1/2 w-full bg-white border border-gray-200 rounded-lg shadow-xl p-4 mb-6 lg:mb-0 max-sm:p-2 max-sm:mb-4">
               <h3 className="text-xl font-semibold bg-indigo-100 text-indigo-700 py-2 px-4 rounded-t-lg max-sm:text-lg max-sm:text-center max-sm:px-2">
                 Issues to Be Resolved
@@ -183,7 +184,7 @@ function History(issues) {
                 )}
               </div>
             </div>
-
+            }
             {/* Issues Raised by Me */}
             <div className="lg:w-1/2 w-full bg-white border border-gray-200 rounded-lg shadow-xl p-4 max-sm:p-2">
               <h3 className="text-xl font-semibold bg-indigo-100 text-indigo-700 py-2 px-4 rounded-t-lg max-sm:text-lg max-sm:text-center max-sm:px-2">

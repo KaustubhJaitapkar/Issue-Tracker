@@ -6,6 +6,7 @@ import Header from './Header';
 function IssueForm () {
 
   const [formData, setFormData] = useState({
+    userId: '',
     issue: '',
     description: '',
     address: '',
@@ -91,6 +92,15 @@ function IssueForm () {
             <option>Software</option>
             <option>Electrician</option>
           </select>
+          <input
+            type="text"
+            name="userId"
+            placeholder="Your id"
+            value={formData.userId}
+            onChange={handleChange}
+            required
+            className="w-full mb-3 sm:mb-4 p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
           <button
             type="submit"
             className="w-full py-2 sm:py-3 bg-indigo-600 text-white text-sm sm:text-base rounded-lg hover:bg-indigo-700"

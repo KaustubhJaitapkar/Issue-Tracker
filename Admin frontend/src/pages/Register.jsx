@@ -20,7 +20,7 @@ function Register() {
   const navigate = useNavigate();
 
   const navigateToAboutPage = () => {
-    navigate('/login');
+    navigate('/');
   };
 
   const handleSubmit = async (e) => {

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Home from "./pages/Home";
 
 import ProtectedRoute from "./pages/ProtectdRouter";
+import DepartmentForm from "./pages/DepartmentForm";
 
 function App(){
   return(
@@ -17,6 +18,8 @@ function App(){
       {/* <Register/> */}
       {/* <Reports/>   */}
       {/* <Home/> */}
+      {/* <DepartmentForm/> */}
+
       <BrowserRouter>
         <Routes>
           

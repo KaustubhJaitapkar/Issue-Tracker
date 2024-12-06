@@ -22,6 +22,14 @@ import {
     getAdmin
 } from "../controllers/issue.controllers.js";
 
+import { 
+    addDepartment, 
+    deleteDepartment, 
+    updateDepartmentType ,
+    checkDepartmentType,
+} from "../controllers/department.controllers.js";
+
+
 import { verifyJWT } from "../middlewares/auth.middlewares.js";
 
 
@@ -49,6 +57,12 @@ router.route("/acknowledge-time").post(verifyJWT,acknowledgeResponse)
 router.route("/fetch-report").get(verifyJWT,fetchReport)
 router.route("/get-admin").get(verifyJWT,getAdmin)
 
+
+router.post('/departments', addDepartment);
+router.delete('/departments/:departmentId', deleteDepartment);
+router.put('/departments/:departmentId/type', updateDepartmentType);
+
+router.get('/department/:name', checkDepartmentType);
 
 router.route("/protected-route").get(verifyJWT,(req,res)=>{return res.status(200).json();})
 export default router
