@@ -28,7 +28,7 @@ function App(){
           <Route path="/issue-history" element={<ProtectedRoute element  = {<History/>}/>} el={"Hello"} ></Route>
           <Route path="/issue-form" element={<ProtectedRoute element = {<IssueForm />}/>} ></Route>
           <Route path="/reports" element={<ProtectedRoute element = {<Reports />}/>} ></Route>
-          <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/add-department" element={<ProtectedRoute><DepartmentForm /></ProtectedRoute>} />
 
           </Routes>
       </BrowserRouter>

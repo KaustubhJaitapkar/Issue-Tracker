@@ -289,7 +289,7 @@ const registerUser = asyncHandler(async (req, res) => {
         [fullName, email, username.toLowerCase(), hashedPassword, department, phoneNumber]
     );
 
-    res.status(201).json("User registered successfully");
+    res.status(200).json({statusCode: 200,message: "User registered successfully"});
 });
 
 

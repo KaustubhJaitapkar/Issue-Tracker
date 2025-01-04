@@ -318,9 +318,9 @@ const fetchReport = async (req, res) => {
     
     const [problems] = await connection.query(`
         SELECT id,issue,description,address,require_department,complete,user_id,
-            DATE_FORMAT(CONVERT_TZ(acknowledge_at, '+00:00','+00:00'), '%Y-%m-%d %H:%i:%s') AS acknowledge_at,
-            DATE_FORMAT(CONVERT_TZ(created_at, '+00:00','+00:00'), '%Y-%m-%d %H:%i:%s') AS created_at,
-    DATE_FORMAT(CONVERT_TZ(updated_at, '+00:00', '+00:00'), '%Y-%m-%d %H:%i:%s') AS updated_at
+            DATE_FORMAT(CONVERT_TZ(acknowledge_at, '+00:00','+00:00'), '%d-%m-%Y %H:%i:%s') AS acknowledge_at,
+            DATE_FORMAT(CONVERT_TZ(created_at, '+00:00','+00:00'), '%d-%m-%Y %H:%i:%s') AS created_at,
+    DATE_FORMAT(CONVERT_TZ(updated_at, '+00:00', '+00:00'), '%d-%m-%Y %H:%i:%s') AS updated_at
         FROM issues
     `);
 

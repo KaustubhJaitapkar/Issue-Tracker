@@ -12,7 +12,7 @@ function LoginForm() {
   const navigate = useNavigate();
 
   const navigateToAboutPage = () => {
-    navigate('/home');  
+    navigate('/issue-history');  
   };
 
   const handleChange = (e) => {

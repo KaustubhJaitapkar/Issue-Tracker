@@ -74,8 +74,8 @@ function Header(){
 
         {/* Menu for larger screens */}
         <div className="hidden md:flex items-center space-x-4 mt-4 md:mt-0">
-          <a href='/home' className="bg-white text-black font-bold py-2 px-4 rounded-2xl transition duration-300 hover:bg-gray-100">
-            Home
+          <a href='/add-department' className="bg-white text-black font-bold py-2 px-4 rounded-2xl transition duration-300 hover:bg-gray-100">
+            Add Department
           </a>
           <a href='/issue-history' className="bg-white text-black font-bold py-2 px-4 rounded-2xl transition duration-300 hover:bg-gray-100">
             Problems History

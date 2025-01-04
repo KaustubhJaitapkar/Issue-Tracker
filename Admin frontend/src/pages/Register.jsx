@@ -20,7 +20,7 @@ function Register() {
   const navigate = useNavigate();
 
   const navigateToAboutPage = () => {
-    navigate('/');
+    navigate('/issue-history');
   };
 
   const handleSubmit = async (e) => {
@@ -87,6 +87,9 @@ function Register() {
             <option>Select your department</option>
             <option>Software</option>
             <option>Electrician</option>
+            <option>Medicine</option>
+            <option>Doctor</option>
+            <option>Admin</option>
           </select>
           <input
             type="email"
