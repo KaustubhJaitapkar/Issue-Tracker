@@ -16,13 +16,13 @@ function App(){
     <>
       {/* <IssueForm/> */}
       {/* <History/> */}
-      {/* <LoginForm/> */}
-      {/* <Register/> */}
-      {/* <Reports/>   */}
-      {/* <Home/> */}
-      {/* <AllLicenses/> */}
-      {/* <ExpiringLicenses/> */}
-      <LicenseUpload/>
+      <LoginForm/>
+      {/* <Register/>
+      <Reports/>  
+      <Home/>
+      <AllLicenses/>
+      <ExpiringLicenses/>
+      <LicenseUpload/> */}
 
       {/* <BrowserRouter>
         <Routes>
