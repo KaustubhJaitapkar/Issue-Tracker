@@ -15,7 +15,7 @@ function ProtectedRoute({ element, children }) {
         }
 
         try {
-            const res = await axios.get('http://localhost:8000/api/v1/users/protected-route', {
+            const res = await axios.get('http://localhost:8000/api/v1/protected-route', {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,  
                 },

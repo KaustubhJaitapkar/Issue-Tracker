@@ -52,7 +52,7 @@ function History(issues) {
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
 
-    axios.get('http://localhost:8000/api/v1/users/get-issue-for-user', {
+    axios.get('http://localhost:8000/api/v1/get-issue-for-user', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -70,7 +70,7 @@ function History(issues) {
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
 
-    axios.get('http://localhost:8000/api/v1/users/get-issue', {
+    axios.get('http://localhost:8000/api/v1/get-issue', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       }, withCredentials: true
@@ -87,7 +87,7 @@ function History(issues) {
     const accessToken = localStorage.getItem('accessToken');
 
     try {
-      await axios.post('http://localhost:8000/api/v1/users/complete-report', {
+      await axios.post('http://localhost:8000/api/v1/complete-report', {
         issueId: taskId
       }, {
         headers: {
@@ -111,7 +111,7 @@ function History(issues) {
     console.log('Task ID:', taskId);
     
     try {
-      await axios.post('http://localhost:8000/api/v1/users/acknowledge-time', {
+      await axios.post('http://localhost:8000/api/v1/acknowledge-time', {
         responseId: taskId
       }, {
         headers: {

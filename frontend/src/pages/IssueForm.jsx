@@ -33,7 +33,7 @@ function IssueForm() {
     }
 
     try {
-      await axios.post('http://localhost:8000/api/v1/users/raise-issue',
+      await axios.post('http://localhost:8000/api/v1/raise-issue',
         formData,
         {
           headers: {
@@ -59,7 +59,7 @@ function IssueForm() {
     }
 
     try {
-      axios.get('http://localhost:8000/api/v1/users/department-names',
+      axios.get('http://localhost:8000/api/v1/department-names',
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,

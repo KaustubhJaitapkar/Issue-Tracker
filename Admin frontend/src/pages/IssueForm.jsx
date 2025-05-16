@@ -31,7 +31,7 @@ function IssueForm () {
     }
 
     try {
-        await axios.post('http://localhost:8000/api/v1/users/raise-issue', 
+        await axios.post('http://localhost:8000/api/v1/raise-issue', 
             formData,
             {
                 headers: {

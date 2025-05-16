@@ -13,7 +13,7 @@ function Reports() {
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
     
-    axios.get('http://localhost:8000/api/v1/users/fetch-report', {
+    axios.get('http://localhost:8000/api/v1/fetch-report', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

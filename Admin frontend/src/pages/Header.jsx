@@ -13,7 +13,7 @@ function Header(){
     useEffect(() => {
       const accessToken = localStorage.getItem('accessToken');
 
-      axios.get('http://localhost:8000/api/v1/users/get-admin',{
+      axios.get('http://localhost:8000/api/v1/get-admin',{
         headers: {
           Authorization: `Bearer ${accessToken}`,  
       },
@@ -40,7 +40,7 @@ function Header(){
       const accessToken = localStorage.getItem('accessToken');
       
         try {
-          await axios.post('http://localhost:8000/api/v1/users/logout',{}, {
+          await axios.post('http://localhost:8000/api/v1/logout',{}, {
             headers: {
               Authorization: `Bearer ${accessToken}`,  
           },

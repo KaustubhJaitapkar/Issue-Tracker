@@ -16,7 +16,7 @@ function App(){
     <>
       {/* <IssueForm/> */}
       {/* <History/> */}
-      <LoginForm/>
+      {/* <LoginForm/> */}
       {/* <Register/>
       <Reports/>  
       <Home/>
@@ -24,7 +24,7 @@ function App(){
       <ExpiringLicenses/>
       <LicenseUpload/> */}
 
-      {/* <BrowserRouter>
+      <BrowserRouter>
         <Routes>
           
           <Route path="/" element={<LoginForm />} ></Route>
@@ -35,7 +35,7 @@ function App(){
           <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
 
           </Routes>
-      </BrowserRouter> */}
+      </BrowserRouter>
     </>
   );
 } 

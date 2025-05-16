@@ -28,7 +28,7 @@ function Register() {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/api/v1/users/get-departments', {
+        const res = await axios.get('http://localhost:8000/api/v1/get-departments', {
           withCredentials: true
         });
         console.log(res.data);
@@ -46,7 +46,7 @@ function Register() {
     e.preventDefault();
     // Handle form submission
     try {
-      const res = await axios.post('http://localhost:8000/api/v1/users/register', {
+      const res = await axios.post('http://localhost:8000/api/v1/register', {
         fullName: formData.name,
         email: formData.email, username: formData.userId, password: formData.password, department: formData.department, phoneNumber: formData.phone
       }, { withCredentials: true });

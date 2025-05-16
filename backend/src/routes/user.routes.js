@@ -49,6 +49,20 @@ router.route("/change-password").post(verifyJWT, changeCurrentPassword)
 router.route("/current-user").get(verifyJWT, getCurrentUser)
 router.route("/update-account").patch(verifyJWT, updateAccountDetails)
 
+// Route for checking if user is authenticated 
+router.route("/protected-route").get(verifyJWT, (req, res) => {
+    return res.status(200).json({
+        success: true,
+        message: "User is authenticated",
+        user: {
+            id: req.user.id,
+            email: req.user.email,
+            fullName: req.user.full_name,
+            isAdmin: req.user.is_admin
+        }
+    });
+})
+
 // Issue management routes
 router.route("/raise-issue").post(verifyJWT, createIssue)
 router.route("/get-issue").get(verifyJWT, getissue)
@@ -79,9 +93,9 @@ router.route("/departments").get(verifyJWT, isAdmin, (req, res) => {
 router.get('/get-departments', verifyJWT, isAdmin, getAllDepartments);
 
 // Admin user management routes
-router.route("/create").post(verifyJWT, isAdmin, adminCreateUser);
-router.route("/").get(verifyJWT, isAdmin, adminGetAllUsers);
-router.route("/:userId").put(verifyJWT, isAdmin, adminUpdateUser);
-router.route("/:userId").delete(verifyJWT, isAdmin, adminDeleteUser);
+router.route("/users/create").post(verifyJWT, isAdmin, adminCreateUser);
+router.route("/users").get(verifyJWT, isAdmin, adminGetAllUsers);
+router.route("/users/:userId").put(verifyJWT, isAdmin, adminUpdateUser);
+router.route("/users/:userId").delete(verifyJWT, isAdmin, adminDeleteUser);
 
 export default router

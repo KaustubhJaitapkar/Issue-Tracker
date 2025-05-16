@@ -23,7 +23,7 @@ function LoginForm() {
     e.preventDefault();
     
     try{
-      const res = await axios.post('http://localhost:8000/api/v1/users/login',{
+      const res = await axios.post('http://localhost:8000/api/v1/login',{
         username:formData.userid, password:formData.password
       },{withCredentials:true});
       if(res.data.statusCode == 200){

@@ -18,7 +18,7 @@ const DepartmentForm = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:8000/api/v1/users/departments", {
+      const response = await axios.post("http://localhost:8000/api/v1/departments", {
         name,
         type,
       });
