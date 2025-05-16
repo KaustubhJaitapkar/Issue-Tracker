@@ -47,3 +47,16 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
         throw new ApiError(401, error?.message || "Invalid access token");
     }
 });
+
+// Middleware to verify if the user is an admin
+export const isAdmin = asyncHandler(async (req, _, next) => {
+    if (!req.user) {
+        throw new ApiError(401, "Unauthorized - Please login first");
+    }
+    
+    if (!req.user.is_admin) {
+        throw new ApiError(403, "Forbidden - Admin access required");
+    }
+    
+    next();
+});

@@ -2,12 +2,14 @@ import { Router } from "express";
 import { 
     loginUser, 
     logoutUser, 
-    registerUser, 
     refreshAccessToken, 
     changeCurrentPassword, 
     getCurrentUser, 
     updateAccountDetails,
-    // getdepartment
+    adminCreateUser,
+    adminGetAllUsers,
+    adminUpdateUser,
+    adminDeleteUser
 } from "../controllers/user.controllers.js";
 
 
@@ -25,46 +27,58 @@ import {
 import { 
     addDepartment, 
     deleteDepartment, 
-    updateDepartmentType ,
+    updateDepartmentType,
     checkDepartmentType,
     fetchMentainanceDeparments,
 } from "../controllers/department.controllers.js";
 
 
-import { verifyJWT } from "../middlewares/auth.middlewares.js";
+import { verifyJWT, isAdmin } from "../middlewares/auth.middlewares.js";
 
 
 const router = Router()
 
-
-router.route("/register").post(registerUser)
+// Public routes - only login is public
 router.route("/login").post(loginUser)
-router.route('/login').get(verifyJWT);
 
-//secured routes
-router.route("/logout").post(verifyJWT,logoutUser)
+// Secured routes (for all authenticated users)
+router.route("/logout").post(verifyJWT, logoutUser)
 router.route("/refresh-token").post(verifyJWT, refreshAccessToken)
 router.route("/change-password").post(verifyJWT, changeCurrentPassword)
 router.route("/current-user").get(verifyJWT, getCurrentUser)
 router.route("/update-account").patch(verifyJWT, updateAccountDetails)
 
-router.route("/raise-issue").post(verifyJWT,createIssue)
-// router.route("/get-department").get(verifyJWT,getdepartment)
-router.route("/get-issue").get(verifyJWT,getissue)
-router.route("/get-issue-for-user").get(verifyJWT,getIssueforuser)
-router.route("/update-response").put(verifyJWT,updateResponses)
-router.route("/complete-report").post(verifyJWT,completeIssue)
-router.route("/acknowledge-time").post(verifyJWT,acknowledgeResponse)
-router.route("/fetch-report").get(verifyJWT,fetchReport)
-router.route("/get-admin").get(verifyJWT,getAdmin)
+// Issue management routes
+router.route("/raise-issue").post(verifyJWT, createIssue)
+router.route("/get-issue").get(verifyJWT, getissue)
+router.route("/get-issue-for-user").get(verifyJWT, getIssueforuser)
+router.route("/update-response").put(verifyJWT, updateResponses)
+router.route("/complete-report").post(verifyJWT, completeIssue)
+router.route("/acknowledge-time").post(verifyJWT, acknowledgeResponse)
+router.route("/fetch-report").get(verifyJWT, fetchReport)
+router.route("/get-admin").get(verifyJWT, getAdmin)
 
-
-router.post('/departments', addDepartment);
-router.delete('/departments/:departmentId', deleteDepartment);
-router.put('/departments/:departmentId/type', updateDepartmentType);
-
+// Public department information routes (for all users)
 router.get('/department/:name', checkDepartmentType);
 router.get('/department-names', fetchMentainanceDeparments);
 
-router.route("/protected-route").get(verifyJWT,(req,res)=>{return res.status(200).json();})
+// Admin dashboard route
+router.route("/dashboard").get(verifyJWT, isAdmin, (req, res) => {
+    return res.status(200).json({ message: "Admin dashboard access granted" });
+})
+
+// Admin department management routes
+router.post('/departments', verifyJWT, isAdmin, addDepartment);
+router.delete('/departments/:departmentId', verifyJWT, isAdmin, deleteDepartment);
+router.put('/departments/:departmentId/type', verifyJWT, isAdmin, updateDepartmentType);
+router.route("/departments").get(verifyJWT, isAdmin, (req, res) => {
+    return res.status(200).json({ message: "Admin can manage all departments" });
+})
+
+// Admin user management routes
+router.route("/create").post(verifyJWT, isAdmin, adminCreateUser);
+router.route("/").get(verifyJWT, isAdmin, adminGetAllUsers);
+router.route("/:userId").put(verifyJWT, isAdmin, adminUpdateUser);
+router.route("/:userId").delete(verifyJWT, isAdmin, adminDeleteUser);
+
 export default router

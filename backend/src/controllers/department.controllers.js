@@ -11,6 +11,15 @@ const addDepartment = async (req, res) => {
 
   try {
     const connection = await getConnection();
+    
+    // Check if department with same name already exists
+    const [existingDept] = await connection.query("SELECT * FROM departments WHERE name = ?", [name]);
+    
+    if (existingDept.length > 0) {
+      return res.status(409).json(new ApiResponse(409, null, "Department with this name already exists"));
+    }
+    
+    // If no duplicate found, insert the new department
     await connection.query("INSERT INTO departments (name, type) VALUES (?, ?)", [name, type]);
 
     res.status(201).json(new ApiResponse(201, { name, type }, "Department added successfully"));

@@ -12,6 +12,7 @@ export class User {
     password,
     department,
     refreshToken,
+    is_admin,
   }) {
     this.id = id;
     this.username = username;
@@ -21,6 +22,7 @@ export class User {
     this.password = password;
     this.department = department;
     this.refreshToken = refreshToken;
+    this.is_admin = is_admin;
   }
 
   static async create(userData) {
@@ -58,6 +60,7 @@ export class User {
         email: this.email,
         username: this.username,
         fullName: this.fullName,
+        is_admin: this.is_admin,
       },
       process.env.ACCESS_TOKEN_SECRET,
       {

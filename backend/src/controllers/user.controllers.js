@@ -3,9 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
-import { getConnection } from "../db/index.js"; // Assuming you have a function to get a MySQL connection
-
-// Generate access and refresh tokens for a user
+import { getConnection } from "../db/index.js";
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
         const connection = await getConnection();
@@ -21,13 +19,17 @@ const generateAccessAndRefreshTokens = async (userId) => {
         const user = users[0];
 
         // Generate the access token with a short expiration time (15 minutes)
-        const accessToken = jwt.sign({ id: user.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
+        const accessToken = jwt.sign(
+            { 
+                id: user.id, 
+                is_admin: user.is_admin 
+            }, 
+            process.env.ACCESS_TOKEN_SECRET, 
+            { expiresIn: "1d" }
+        );
 
         // Generate the refresh token with a longer expiration time (7 days)
         const refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
-
-        // Store the refresh token in the database
-        // await connection.query("UPDATE users SET refresh_token = ? WHERE id = ?", [refreshToken, user.id]);
 
         return { accessToken, refreshToken };
     } catch (error) {
@@ -39,7 +41,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
 // Register a new user
 const registerUser = asyncHandler(async (req, res) => {
-    const { fullName, email, username, password, department, phoneNumber } = req.body;
+    const { fullName, email, username, password, department, phoneNumber, isAdmin } = req.body;
 
     if ([fullName, email, username, password].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All fields are required");
@@ -53,32 +55,38 @@ const registerUser = asyncHandler(async (req, res) => {
         [username, email]
     );
 
-    console.log("Query result:", existingUser);
-
     if (existingUser.length > 0) {
         throw new ApiError(409, "User with email or username already exists");
     }
 
-    const [existingDept] = await connection.query(
-        "SELECT department_id FROM departments WHERE name = ?",
-        [department]
-    );
+    // Only check department if not creating an admin user
+    let departmentId = null;
+    if (!isAdmin && department) {
+        const [existingDept] = await connection.query(
+            "SELECT department_id FROM departments WHERE name = ?",
+            [department]
+        );
 
-    if (existingDept.length === 0) {
-        throw new ApiError(409, "Department not exist.");
+        if (existingDept.length === 0) {
+            throw new ApiError(409, "Department does not exist");
+        }
+        departmentId = existingDept[0].department_id;
+    } else if (!isAdmin && !department) {
+        throw new ApiError(400, "Department is required for non-admin users");
     }
-
-    // console.log(existingDept)
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Set is_admin field based on the request
+    const is_admin = isAdmin ? 1 : 0;
+
     await connection.query(
-        "INSERT INTO users (full_name, email, id, password, department_id, phone_number) VALUES (?, ?, ?, ?, ?, ?)",
-        [fullName, email, username.toLowerCase(), hashedPassword, existingDept[0].department_id, phoneNumber]
+        "INSERT INTO users (full_name, email, id, password, department_id, phone_number, is_admin) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [fullName, email, username.toLowerCase(), hashedPassword, departmentId, phoneNumber, is_admin]
     );
 
-    res.status(200).json({statusCode: 200,message: "User registered successfully"});
+    res.status(200).json({statusCode: 200, message: is_admin ? "Admin registered successfully" : "User registered successfully"});
 });
 
 
@@ -117,15 +125,20 @@ const loginUser = asyncHandler(async (req, res) => {
     const loggedInUser = {
         id: user.id,
         email: user.email,
-        fullName: user.full_name, // Make sure the field name matches your database column
-        phoneNumber: user.phone_number, // Match column name
-        department: user.department,
+        fullName: user.full_name,
+        phoneNumber: user.phone_number,
+        department: user.department_id,
+        is_admin: user.is_admin || false
     };
 
     // Set cookies and send response
     res.cookie("accessToken", accessToken, { httpOnly: true, secure: true, sameSite: "None" });
+    
+    // Return different message based on user type
+    const successMessage = user.is_admin ? "Admin logged in successfully" : "User logged in successfully";
+    
     res.status(200).json(
-        new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, "User logged in successfully")
+        new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, successMessage)
     );
 });
 
@@ -202,6 +215,216 @@ const getDepartmentIssues = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, issues, "Issues fetched successfully"));
 });
 
+// Admin: Create a new user (admin can create both regular and admin users)
+const adminCreateUser = asyncHandler(async (req, res) => {
+    const { fullName, email, username, password, department, phoneNumber, isAdmin } = req.body;
+
+    // Validate required fields
+    if ([fullName, email, username, password].some((field) => !field || field.trim() === "")) {
+        throw new ApiError(400, "All required fields must be provided");
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        throw new ApiError(400, "Please provide a valid email address");
+    }
+
+    // Validate phone number format (optional field)
+    if (phoneNumber && !/^\d{10,15}$/.test(phoneNumber.replace(/[^\d]/g, ''))) {
+        throw new ApiError(400, "Please provide a valid phone number");
+    }
+
+    const connection = await getConnection();
+
+    // Check if user already exists with same username or email
+    const [existingUser] = await connection.query(
+        "SELECT * FROM users WHERE id = ? OR email = ?",
+        [username, email]
+    );
+
+    if (existingUser.length > 0) {
+        // Check which field caused the conflict
+        if (existingUser[0].id === username) {
+            throw new ApiError(409, "Username already exists");
+        } else if (existingUser[0].email === email) {
+            throw new ApiError(409, "Email already exists");
+        } else {
+            throw new ApiError(409, "User with email or username already exists");
+        }
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Set is_admin field based on the request
+    const is_admin = isAdmin ? 1 : 0;
+
+    let departmentId = null;
+    
+    // Only check for department if user is not an admin or if department is specified for an admin
+    if (!is_admin || (is_admin && department)) {
+        if (!department && !is_admin) {
+            throw new ApiError(400, "Department is required for regular users");
+        }
+        
+        if (department) {
+            const [existingDept] = await connection.query(
+                "SELECT department_id FROM departments WHERE name = ?",
+                [department]
+            );
+
+            if (existingDept.length === 0) {
+                throw new ApiError(404, "Department not found");
+            }
+            
+            departmentId = existingDept[0].department_id;
+        }
+    }
+
+    // Insert the new user
+    await connection.query(
+        "INSERT INTO users (full_name, email, id, password, department_id, phone_number, is_admin) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [fullName, email, username.toLowerCase(), hashedPassword, departmentId, phoneNumber, is_admin]
+    );
+
+    res.status(201).json(
+        new ApiResponse(201, { 
+            username, 
+            email, 
+            isAdmin: !!is_admin,
+            department: department || null 
+        }, 
+        is_admin ? "Admin user created successfully" : "User created successfully")
+    );
+});
+
+// Admin: Get all users
+const adminGetAllUsers = asyncHandler(async (req, res) => {
+    const connection = await getConnection();
+    
+    // Get all users with their department information
+    const [users] = await connection.query(`
+        SELECT u.id, u.full_name, u.email, u.phone_number, 
+               u.is_admin, u.created_at, d.name AS department_name 
+        FROM users u
+        LEFT JOIN departments d ON u.department_id = d.department_id
+        ORDER BY u.created_at DESC
+    `);
+
+    res.status(200).json(
+        new ApiResponse(200, { users }, "Users fetched successfully")
+    );
+});
+
+// Admin: Update user
+const adminUpdateUser = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { fullName, email, phoneNumber, department, isAdmin } = req.body;
+
+    const connection = await getConnection();
+
+    // Check if user exists
+    const [userExists] = await connection.query("SELECT * FROM users WHERE id = ?", [userId]);
+    if (userExists.length === 0) {
+        throw new ApiError(404, "User not found");
+    }
+
+    // Check if we're changing user to/from admin
+    const currentIsAdmin = userExists[0].is_admin;
+    const changingToAdmin = isAdmin !== undefined && isAdmin && !currentIsAdmin;
+    const changingFromAdmin = isAdmin !== undefined && !isAdmin && currentIsAdmin;
+    
+    let departmentId = userExists[0].department_id;
+    
+    // Handle department changes
+    if (department) {
+        const [deptResult] = await connection.query(
+            "SELECT department_id FROM departments WHERE name = ?", 
+            [department]
+        );
+        
+        if (deptResult.length === 0) {
+            throw new ApiError(404, "Department not found");
+        }
+        
+        departmentId = deptResult[0].department_id;
+    } else if (changingToAdmin) {
+        // If changing to admin and no department specified, set department to NULL
+        departmentId = null;
+    } else if (changingFromAdmin && !department) {
+        // If changing from admin to regular user, require a department
+        throw new ApiError(400, "Department is required when changing from admin to regular user");
+    }
+
+    // Build update query dynamically based on provided fields
+    const updateFields = [];
+    const updateValues = [];
+
+    if (fullName) {
+        updateFields.push("full_name = ?");
+        updateValues.push(fullName);
+    }
+
+    if (email) {
+        updateFields.push("email = ?");
+        updateValues.push(email);
+    }
+
+    if (phoneNumber) {
+        updateFields.push("phone_number = ?");
+        updateValues.push(phoneNumber);
+    }
+
+    // Always update department_id if we're changing admin status
+    if (department || changingToAdmin || changingFromAdmin) {
+        updateFields.push("department_id = ?");
+        updateValues.push(departmentId);
+    }
+
+    if (isAdmin !== undefined) {
+        updateFields.push("is_admin = ?");
+        updateValues.push(isAdmin ? 1 : 0);
+    }
+
+    if (updateFields.length === 0) {
+        throw new ApiError(400, "No fields provided for update");
+    }
+
+    // Add user ID to values
+    updateValues.push(userId);
+
+    // Execute update
+    await connection.query(
+        `UPDATE users SET ${updateFields.join(", ")} WHERE id = ?`,
+        updateValues
+    );
+
+    res.status(200).json(
+        new ApiResponse(200, { userId }, "User updated successfully")
+    );
+});
+
+// Admin: Delete user
+const adminDeleteUser = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    
+    const connection = await getConnection();
+    
+    // Check if user exists
+    const [userExists] = await connection.query("SELECT * FROM users WHERE id = ?", [userId]);
+    if (userExists.length === 0) {
+        throw new ApiError(404, "User not found");
+    }
+    
+    // Delete the user
+    await connection.query("DELETE FROM users WHERE id = ?", [userId]);
+    
+    res.status(200).json(
+        new ApiResponse(200, { userId }, "User deleted successfully")
+    );
+});
+
 export {
     registerUser,
     loginUser,
@@ -211,6 +434,10 @@ export {
     getCurrentUser,
     updateAccountDetails,
     getDepartmentIssues,
+    adminCreateUser,
+    adminGetAllUsers,
+    adminUpdateUser,
+    adminDeleteUser,
 };
 
 
