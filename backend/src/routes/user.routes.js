@@ -30,6 +30,7 @@ import {
     updateDepartmentType,
     checkDepartmentType,
     fetchMentainanceDeparments,
+    getAllDepartments,
 } from "../controllers/department.controllers.js";
 
 
@@ -74,6 +75,8 @@ router.put('/departments/:departmentId/type', verifyJWT, isAdmin, updateDepartme
 router.route("/departments").get(verifyJWT, isAdmin, (req, res) => {
     return res.status(200).json({ message: "Admin can manage all departments" });
 })
+
+router.get('/get-departments', verifyJWT, isAdmin, getAllDepartments);
 
 // Admin user management routes
 router.route("/create").post(verifyJWT, isAdmin, adminCreateUser);

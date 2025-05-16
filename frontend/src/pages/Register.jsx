@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import AlertBox from '../components/AlertBox';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -13,15 +13,34 @@ function Register() {
     password: ''
   });
 
+  const [departments, setDepartments] = useState([]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   // const navigate = useNavigate();
 
-  const navigateToAboutPage = () => {
-    // navigate('/login');
-  };
+  // const navigateToAboutPage = () => {
+  //   // navigate('/login');
+  // };
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const res = await axios.get('http://localhost:8000/api/v1/users/get-departments', {
+          withCredentials: true
+        });
+        console.log(res.data);
+        setDepartments(res.data.data); // assuming res.data.data is an array of departments
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +53,7 @@ function Register() {
       console.log(res);
       if (res.data.statusCode == 200) {
         console.log("Success on login");
-        AlertBox(1,"User registered successfully!!");
+        AlertBox(1, "User registered successfully!!");
         // navigateToAboutPage();
       } else {
         console.log("Error on login");
@@ -77,7 +96,7 @@ function Register() {
             onChange={handleChange}
             className="w-full px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
           />
-          <select
+          {/* <select
             
             name="department"
             value={formData.department}
@@ -88,7 +107,22 @@ function Register() {
             <option>Software</option>
             <option>Electrician</option>
             <option>Doctor</option>
+          </select> */}
+
+          <select
+            name="department"
+            value={formData.department}
+            onChange={handleChange}
+            className="w-full mb-3 sm:mb-4 p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">Select your department</option>
+            {departments.map((dept, idx) => (
+              <option key={idx} value={dept}>
+                {dept.name}
+              </option>
+            ))}
           </select>
+
           <input
             type="email"
             name="email"
