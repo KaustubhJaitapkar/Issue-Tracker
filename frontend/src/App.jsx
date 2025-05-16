@@ -7,6 +7,9 @@ import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Home from "./pages/Home";
 
 import ProtectedRoute from "./pages/ProtectdRouter";
+import AllLicenses from "./pages/AllLicenses";
+import ExpiringLicenses from "./pages/ExpiringLicenses";
+import LicenseUpload from "./pages/LicenseUpload";
 
 function App(){
   return(
@@ -17,7 +20,11 @@ function App(){
       {/* <Register/> */}
       {/* <Reports/>   */}
       {/* <Home/> */}
-      <BrowserRouter>
+      {/* <AllLicenses/> */}
+      {/* <ExpiringLicenses/> */}
+      <LicenseUpload/>
+
+      {/* <BrowserRouter>
         <Routes>
           
           <Route path="/" element={<LoginForm />} ></Route>
@@ -28,7 +35,7 @@ function App(){
           <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
 
           </Routes>
-      </BrowserRouter>
+      </BrowserRouter> */}
     </>
   );
 } 

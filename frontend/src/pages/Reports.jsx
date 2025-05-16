@@ -60,7 +60,7 @@ function Reports(issues) {
                       <p className={task.complete ? 'text-green-600' : 'text-red-500'}>
                         {task.complete ? 'Yes' : 'No'}
                       </p>
-                      <p className="text-gray-700">{task.require_department}</p>
+                      <p className="text-gray-700">{task.require_department_id}</p>
                       <p className="text-gray-500">{task.acknowledge_at}</p>
                       <p className="text-gray-500">{task.created_at}</p>
                       <p className="text-gray-500">

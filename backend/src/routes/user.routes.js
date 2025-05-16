@@ -16,7 +16,7 @@ import {
     getissue,
     updateResponses,
     getIssueforuser,
-    completeReport,
+    completeIssue,
     acknowledgeResponse,
     fetchReport,
     getAdmin
@@ -27,6 +27,7 @@ import {
     deleteDepartment, 
     updateDepartmentType ,
     checkDepartmentType,
+    fetchMentainanceDeparments,
 } from "../controllers/department.controllers.js";
 
 
@@ -52,7 +53,7 @@ router.route("/raise-issue").post(verifyJWT,createIssue)
 router.route("/get-issue").get(verifyJWT,getissue)
 router.route("/get-issue-for-user").get(verifyJWT,getIssueforuser)
 router.route("/update-response").put(verifyJWT,updateResponses)
-router.route("/complete-report").post(verifyJWT,completeReport)
+router.route("/complete-report").post(verifyJWT,completeIssue)
 router.route("/acknowledge-time").post(verifyJWT,acknowledgeResponse)
 router.route("/fetch-report").get(verifyJWT,fetchReport)
 router.route("/get-admin").get(verifyJWT,getAdmin)
@@ -63,6 +64,7 @@ router.delete('/departments/:departmentId', deleteDepartment);
 router.put('/departments/:departmentId/type', updateDepartmentType);
 
 router.get('/department/:name', checkDepartmentType);
+router.get('/department-names', fetchMentainanceDeparments);
 
 router.route("/protected-route").get(verifyJWT,(req,res)=>{return res.status(200).json();})
 export default router

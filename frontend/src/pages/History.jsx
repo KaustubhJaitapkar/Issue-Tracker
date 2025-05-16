@@ -77,6 +77,8 @@ function History(issues) {
     })
       .then((response) => {
         setToResolvetasks(response.data.data);
+        console.log(response);
+        
       })
       .catch((error) => {
         console.log(error);

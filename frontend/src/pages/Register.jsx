@@ -87,6 +87,7 @@ function Register() {
             <option>Select your department</option>
             <option>Software</option>
             <option>Electrician</option>
+            <option>Doctor</option>
           </select>
           <input
             type="email"

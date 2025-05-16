@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import {useEffect} from 'react';
+import { useEffect } from 'react';
 import axios from 'axios';
 import Header from './Header';
 
-function IssueForm () {
+function IssueForm() {
 
   const [formData, setFormData] = useState({
-    userId: '',
+    // userId: '',
     issue: '',
     description: '',
     address: '',
     requireDepartment: '',
   });
+
+  const [departments, setDeparments] = useState([{}])
 
   const navigateToAboutPage = () => {
     window.location.href = '/issue-history';
@@ -23,35 +25,62 @@ function IssueForm () {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const accessToken = localStorage.getItem('accessToken');
     if (!accessToken) {
-        console.error('Access token not found');
-        return;
+      console.error('Access token not found');
+      return;
     }
 
     try {
-        await axios.post('http://localhost:8000/api/v1/users/raise-issue', 
-            formData,
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,  
-                    'Content-Type': 'application/json'
-                },
-                withCredentials: true 
-            }
-        );
-        navigateToAboutPage();
+      await axios.post('http://localhost:8000/api/v1/users/raise-issue',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
+        }
+      );
+      navigateToAboutPage();
     } catch (error) {
-        console.error('Error submitting issue:', error.response?.data || error.message);
+      console.error('Error submitting issue:', error.response?.data || error.message);
     }
-};
 
+  };
+
+  useEffect(() => {
+
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      console.error('Access token not found');
+      return;
+    }
+
+    try {
+      axios.get('http://localhost:8000/api/v1/users/department-names',
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
+        }
+      ).then((response) => {
+        setDeparments(response.data.data.departments);
+        console.log(response.data.data);
+      })
+
+    } catch (error) {
+      console.error('Error in fetching departments.', error.response?.data || error.message);
+    }
+  }, []);
 
   return (
     <div className="issue-form-container">
-      <Header/>
-      
+      <Header />
+
       <div className="flex justify-center mt-12 px-2 sm:px-0">
         <form
           onSubmit={handleSubmit}
@@ -82,17 +111,26 @@ function IssueForm () {
             required
             className="w-full mb-3 sm:mb-4 p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
+          
           <select
             value={formData.requireDepartment}
             onChange={handleChange}
             name="requireDepartment"
             className="w-full mb-3 sm:mb-4 p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            <option>Select required department</option>
-            <option>Software</option>
-            <option>Electrician</option>
+            <option value="">Select required department</option>
+            {departments.length > 0 ? (
+              departments.map((department, index) => (
+                <option key={index} value={department.name}>
+                  {department.name}
+                </option>
+              ))
+            ) : (
+              <option disabled>Loading departments...</option>
+            )}
           </select>
-          <input
+
+          {/* <input
             type="text"
             name="userId"
             placeholder="Your id"
@@ -100,7 +138,7 @@ function IssueForm () {
             onChange={handleChange}
             required
             className="w-full mb-3 sm:mb-4 p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          /> */}
           <button
             type="submit"
             className="w-full py-2 sm:py-3 bg-indigo-600 text-white text-sm sm:text-base rounded-lg hover:bg-indigo-700"
@@ -109,7 +147,7 @@ function IssueForm () {
           </button>
         </form>
       </div>
-      
+
     </div>
   );
 };

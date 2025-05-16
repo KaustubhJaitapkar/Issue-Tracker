@@ -80,12 +80,27 @@ const checkDepartmentType = async (req, res) => {
   }
 };
 
+const fetchMentainanceDeparments = async (req, res) => {
+  
+  try {
+    const connection = await getConnection();
+    const [departments] = await connection.query("SELECT name FROM departments WHERE type = 'maintainance'");
 
+    if (departments.length === 0) {
+      return res.status(404).json(new ApiResponse(404, null, "Department not found"));
+    }
+
+    res.status(200).json(new ApiResponse(200, { departments }, "Department type fetched successfully"));
+  } catch (error) {
+    console.error("Error fetching department type:", error);
+    res.status(500).json(new ApiResponse(500, null, "Internal server error"));
+  }
+};
 
 export {
   addDepartment,
   deleteDepartment,
   updateDepartmentType,
   checkDepartmentType,
+  fetchMentainanceDeparments,
 };
-
