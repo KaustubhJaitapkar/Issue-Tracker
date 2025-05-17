@@ -145,9 +145,6 @@ function History(issues) {
 
         <Header />
         <main className="p-6 max-sm:p-2">
-          <section className="text-center mb-10 max-sm:mb-6">
-            <h2 className="text-3xl font-semibold text-gray-800 max-sm:text-2xl">History</h2>
-          </section>
 
           <div className="flex flex-col lg:flex-row lg:space-x-6 justify-center items-start">
 

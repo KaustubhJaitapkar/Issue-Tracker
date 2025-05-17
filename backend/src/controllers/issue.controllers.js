@@ -1,6 +1,7 @@
 import { getConnection } from "../db/index.js";  // Assuming you have a connection utility
 import { sendEmail } from "../utils/emailService.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
 
 // Helper function to get the current time in DD/MM/YYYY HH:MM:SS format
 const giveTime = () => {
@@ -19,40 +20,76 @@ const giveTime = () => {
 
 // Create a new issue
 const createIssue = async (req, res) => {
-    const { issue, description, address, requireDepartment } = req.body;
+    try {
+        const { issue, description, address, requireDepartment } = req.body;
 
-    if ([issue, address, requireDepartment].some((field) => field?.trim() === "")) {
-        return res.status(400).json(new ApiResponse(400, null, "All fields are required"));
+        if ([issue, address, requireDepartment].some((field) => field?.trim() === "")) {
+            return res.status(400).json(new ApiResponse(400, null, "All fields are required"));
+        }
+
+        const connection = await getConnection();
+        
+        // Check if department exists
+        const [dept] = await connection.query("SELECT department_id FROM departments WHERE name = ?", requireDepartment);
+        
+        if (!dept || dept.length === 0) {
+            return res.status(404).json(new ApiResponse(404, null, "Department not found"));
+        }
+        
+        // Check if there are users in the department
+        const [availableUsers] = await connection.query("SELECT * FROM users WHERE department_id = ?", dept[0].department_id);
+        
+        let warningMessage = null;
+        if (!availableUsers || availableUsers.length === 0) {
+            warningMessage = "Warning: No users available in the required department. Issue will be created but cannot be assigned.";
+        }
+
+        const createdAt = giveTime();  // Returns correct date format
+
+        // Insert the issue
+        const [result] = await connection.query(
+            "INSERT INTO issues (issue, description, address, require_department_id, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            [issue, description, address, dept[0].department_id, req.user.id, createdAt]
+        );
+        
+        // If users are available, send email notification
+        if (availableUsers && availableUsers.length > 0) {
+            // Select a user from the department to notify (first user)
+            const targetUser = availableUsers[0];
+            
+            // Send email notification if the user has an email
+            if (targetUser && targetUser.email) {
+                // Send email to the department user
+                const subject = 'New Issue Assigned';
+                const text = `Dear ${targetUser.fullName || targetUser.username},\n\nYou have been assigned a new issue:\n\nIssue: ${issue}\nDescription: ${description}\nAddress: ${address}\n\nPlease address this issue as soon as possible.\n\nThank you,\nUAIMS HR`;
+
+                await sendEmail(targetUser.email, subject, text);
+            } else {
+                console.warn("Email not available for user in department", requireDepartment);
+            }
+        } else {
+            console.warn("No users available in department", requireDepartment);
+        }
+
+        return res.status(201).json(
+            new ApiResponse(201, 
+                { 
+                    id: result.insertId,
+                    issue, 
+                    description, 
+                    address, 
+                    requireDepartment,
+                    warning: warningMessage
+                }, 
+                warningMessage || "Issue created successfully"
+            )
+        );
+    } catch (error) {
+        console.error("Error creating issue:", error);
+        return res.status(500).json(
+            new ApiResponse(500, null, "An error occurred while creating the issue: " + error.message)
+        );
     }
-
-    const connection = await getConnection();
-    const [dept] = await connection.query("SELECT department_id FROM departments WHERE name = ?", requireDepartment);
-    const [availableUser] = await connection.query("SELECT * FROM users WHERE department_id = ?", dept[0].department_id);
-
-    if (!availableUser) {
-        return res.status(401).json(new ApiResponse(401, null, "Required department is not available"));
-    }
-
-    const createdAt = giveTime();  // Returns correct date format
-    const updatedAt = giveTime();  // Returns correct date format
-
-    await connection.query("INSERT INTO issues (issue, description, address, require_department_id, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-        [issue, description, address, dept[0].department_id, req.user.id, createdAt]);
-    
-    const User = availableUser[0];
-    
-    // Check if email exists
-    if (User.email) {
-        // Send email to the department user
-        const subject = 'New Issue Assigned';
-        const text = `Dear ${User.fullName},\n\nYou have been assigned a new issue:\n\nIssue: ${issue}\nDescription: ${description}\nAddress: ${address}\n\nPlease address this issue as soon as possible.\n\nThank you,\nUAIMS HR`;
-
-        await sendEmail(User.email, subject, text);
-    } else {
-        console.error("Email not available for user", User);
-    }
-
-    res.status(200).json(new ApiResponse(200, { issue, description, address, requireDepartment }, "Issue created successfully"));
 };
 
 
@@ -115,15 +152,14 @@ const completeIssue = async (req, res) => {
 
     const [issue] = await connection.query("SELECT * FROM issues WHERE id = ?", [issueId]);
 
-    if (!issue) {
+    if (!issue || issue.length === 0) {
         return res.status(404).json(new ApiResponse(404, null, "No issue found with the provided ID for this user"));
     }
 
+    // Only update the complete flag and updated_at timestamp, preserve acknowledge_at
     await connection.query("UPDATE issues SET complete = true, updated_at = ? WHERE id = ?", [giveTime(), issueId]);
-    // await connection.query("UPDATE responses SET complete = true WHERE issueId = ?", [issueId]);
 
-    // const [responses] = await connection.query("SELECT * FROM responses WHERE issueId = ?", [issueId]);
-    res.status(200).json(new ApiResponse(200, { issue }, "Issue marked as complete successfully"));
+    res.status(200).json(new ApiResponse(200, { issue: issue[0] }, "Issue marked as complete successfully"));
 };
 
 // Acknowledge a response
@@ -131,32 +167,49 @@ const acknowledgeResponse = async (req, res) => {
     const { responseId } = req.body;
     const connection = await getConnection();
 
-    // const [response] = await connection.query("SELECT * FROM responses WHERE id = ?", [responseId]);
-
-    // if (!response) {
-    //     return res.status(404).json(new ApiResponse(404, null, "No response found with the provided ID"));
-    // }
+    // First, get the current issue status to preserve completion status
+    const [currentIssue] = await connection.query("SELECT * FROM issues WHERE id = ?", [responseId]);
+    
+    if (!currentIssue || currentIssue.length === 0) {
+        return res.status(404).json(new ApiResponse(404, null, "No issue found with the provided ID"));
+    }
 
     const currentTime = giveTime();
     console.log(responseId);
     
-    await connection.query("UPDATE issues SET acknowledge_at = ? WHERE id = ?", [currentTime, responseId]);
-    // await connection.query("UPDATE responses SET acknowledge_at = ? WHERE id = ?", [currentTime, responseId]);
+    // Update only the acknowledge_at field, explicitly setting complete to false
+    await connection.query("UPDATE issues SET acknowledge_at = ?, complete = false WHERE id = ?", [currentTime, responseId]);
 
     res.status(200).json(new ApiResponse(200, "Response acknowledged successfully"));
 };
 
-// Fetch completed problems
 const fetchReport = async (req, res) => {
     const connection = await getConnection();
-    
+
     const [problems] = await connection.query(`
-        SELECT id,issue,description,address,require_department_id,complete,user_id,
-            DATE_FORMAT(CONVERT_TZ(acknowledge_at, '+00:00','+00:00'), '%d-%m-%Y %H:%i:%s') AS acknowledge_at,
-            DATE_FORMAT(CONVERT_TZ(created_at, '+00:00','+00:00'), '%d-%m-%Y %H:%i:%s') AS created_at,
-    DATE_FORMAT(CONVERT_TZ(updated_at, '+00:00', '+00:00'), '%d-%m-%Y %H:%i:%s') AS updated_at
-        FROM issues
+        SELECT 
+            i.id,
+            i.issue,
+            i.description,
+            i.address,
+            rd.name AS required_department_name,
+            u.full_name AS user_name,
+            ud.name AS user_department_name,
+            i.complete,
+            DATE_FORMAT(CONVERT_TZ(i.acknowledge_at, '+00:00','+00:00'), '%d-%m-%Y %H:%i:%s') AS acknowledge_at,
+            DATE_FORMAT(CONVERT_TZ(i.created_at, '+00:00','+00:00'), '%d-%m-%Y %H:%i:%s') AS created_at,
+            DATE_FORMAT(CONVERT_TZ(i.updated_at, '+00:00','+00:00'), '%d-%m-%Y %H:%i:%s') AS updated_at
+        FROM 
+            issues i
+        JOIN 
+            departments rd ON i.require_department_id = rd.department_id
+        LEFT JOIN 
+            users u ON i.user_id = u.id
+        LEFT JOIN 
+            departments ud ON u.department_id = ud.department_id
     `);
+
+    // console.log(problems);
 
     res.status(200).json(new ApiResponse(200, problems, "Completed problems and responses fetched successfully"));
 };

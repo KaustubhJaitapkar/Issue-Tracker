@@ -1,19 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import AlertBox from '../components/AlertBox'
+import AlertBox from '../components/AlertBox';
+import { useAuth } from '../context/AuthContext';
 
 function LoginForm() {
   const [formData, setFormData] = useState({
     userid: '',
     password: '',
   });
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-
-  const navigateToAboutPage = () => {
-    navigate('/home');  
-  };
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,63 +19,81 @@ function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     
-    try{
-      const res = await axios.post('http://localhost:8000/api/v1/login',{
-        username:formData.userid, password:formData.password
-      },{withCredentials:true});
-      if(res.data.statusCode == 200){
-        AlertBox(1,"Login Successfull");
-        
-        localStorage.setItem("accessToken", res.data.data.accessToken);
-        localStorage.setItem("refreshToken", res.data.data.refreshToken);
-        navigateToAboutPage();
-      }else{
+    try {
+      const result = await login(formData.userid, formData.password);
+      
+      if (result.success) {
+        AlertBox(1, "Login Successful");
+        navigate('/home');
+      } else {
         console.log("Error");
-        
+        AlertBox(2, result.message);
       }
-
-    }catch(e){
+    } catch (e) {
       console.log(e);
-      AlertBox(2,"User id or Password incorrect");
+      AlertBox(2, "User ID or Password incorrect");
+    } finally {
+      setLoading(false);
     }
-    
   };
 
   return (
-    <>
-      <div className="w-full max-w-xs max-sm:max-w-[18rem] sm:max-w-[18rem] md:max-w-[20rem] lg:max-w-xs p-5 md:p-6 bg-white border-1 rounded-lg shadow-2xl border border-blue-800 mx-auto my-10 md:my-16 lg:my-24 ">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-center text-orange-500 mb-2 md:mb-3 font-serif">UIAMS</h1>
-        <h2 className="text-base sm:text-lg md:text-xl font-bold text-center text-blue-500 mb-3 md:mb-4 font-serif">Login</h2>
-        <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3">
-          <input
-            type="text"
-            name="userid"
-            placeholder="User Id"
-            value={formData.userid}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-          />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="max-w-md w-full mx-auto my-8 p-8 bg-white rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-blue-600 mb-2">UIAMS</h2>
+          <h3 className="text-xl font-medium text-gray-600">Login to your account</h3>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="userid" className="block text-sm font-medium text-gray-700 mb-1">
+              User ID
+            </label>
+            <input
+              type="text"
+              id="userid"
+              name="userid"
+              value={formData.userid}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              placeholder="Enter your user ID"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              placeholder="Enter your password"
+            />
+          </div>
+          
           <button
             type="submit"
-            className="w-full py-2 sm:py-3 md:py-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-300 "
+            disabled={loading}
+            className={`w-full px-4 py-3 text-white font-medium rounded-lg shadow-md ${
+              loading 
+                ? 'bg-blue-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-opacity-50 transition-colors duration-300 transform hover:-translate-y-0.5'
+            }`}
           >
-            Login
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
       </div>
-      
-    </>
+    </div>
   );
 }
 

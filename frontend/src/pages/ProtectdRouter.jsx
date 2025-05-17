@@ -1,45 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
-function ProtectedRoute({ element, children }) {
-    const [isAuthenticated, setIsAuthenticated] = useState(null);  
+function ProtectedRoute({ element, children, adminOnly }) {
+    const { user, isAdmin, isLoading } = useAuth();
     const location = useLocation();
 
-    const checkAuth = async () => {
-        const accessToken = localStorage.getItem('accessToken');  
-        
-        if (!accessToken) {
-            setIsAuthenticated(false);
-            return;
-        }
-
-        try {
-            const res = await axios.get('http://localhost:8000/api/v1/protected-route', {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,  
-                },
-                withCredentials: true,
-            });
-            setIsAuthenticated(true);
-            console.log(res.data);
-        } catch (error) {
-            setIsAuthenticated(false);
-            console.error('Authorization error:', error.response?.data || error.message);
-        }
-    };
-
-    useEffect(() => {
-        console.log("Checking protected route");
-        checkAuth();
-    }, []);
-
-    if (isAuthenticated === null) {
-        return <div>Loading...</div>;  
+    if (isLoading) {
+        return <div>Loading...</div>;
     }
 
-    if (!isAuthenticated) {
+    if (!user) {
         return <Navigate to="/" state={{ from: location }} replace />;
+    }
+
+    // If route requires admin access and user is not an admin
+    if (adminOnly && !isAdmin) {
+        return <Navigate to="/home" state={{ from: location }} replace />;
     }
 
     return element ? element : children;

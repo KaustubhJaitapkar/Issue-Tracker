@@ -1,118 +1,125 @@
 import React, { useState } from 'react';
-import { Link,useNavigate } from 'react-router-dom'; 
-import { useEffect } from 'react';
-import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom'; 
+import { useAuth } from '../context/AuthContext';
 
-
-function Header(){
-
-    const [adminId,setAdminId] = useState();
+function Header() {
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
+    const { isAdmin, logout } = useAuth();
 
-    useEffect(() => {
-      const accessToken = localStorage.getItem('accessToken');
-
-      axios.get('http://localhost:8000/api/v1/get-admin',{
-        headers: {
-          Authorization: `Bearer ${accessToken}`,  
-      },
-        withCredentials:true})
-        .then((response) => {
-          setAdminId(response.data.data);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    }, []);
-
-    const handleLogOut = async (e) => {
-      const accessToken = localStorage.getItem('accessToken');
-      
-        try {
-          await axios.post('http://localhost:8000/api/v1/logout',{}, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,  
-          },
-            withCredentials: true });
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-        } catch (error) {
-          console.error('Error completing the task:', error);
-        }
-       
-          
+    const handleLogOut = async () => {
+        await logout();
         navigate("/");
-      };
+    };
     
-    return(
-        <>
-            <header className="bg-blue-700 text-white p-4 max-md:p-1">
-      <div className="flex justify-between items-center">
-        {/* Logo */}
-        <div>
-          <h1 className="text-2xl max-sm:text-base lg:text-3xl text-white font-bold">UIAMS</h1>
-        </div>
-
-        {/* Menu Button on small screens, aligned to the right */}
-        <button
-          className="md:hidden ml-auto bg-white text-indigo-600 font-bold py-1 px-2 rounded transition duration-300 hover:bg-gray-100 max-sm:px-1 max-sm:py-0"
-          onClick={() => setMenuOpen(!menuOpen)} // Toggle menu open/close
-        >
-          Menu
-        </button>
-
-        {/* Menu for larger screens */}
-        <div className="hidden md:flex items-center space-x-4 mt-4 md:mt-0">
-          <a href='/home' className="bg-white text-black font-bold py-2 px-4 rounded-2xl transition duration-300 hover:bg-gray-100">
-            Home
-          </a>
-          <a href='/issue-history' className="bg-white text-black font-bold py-2 px-4 rounded-2xl transition duration-300 hover:bg-gray-100">
-            Problems History
-          </a>
-          <a href='/issue-form' className="bg-white text-black font-bold py-2 px-4 rounded-2xl transition duration-300 hover:bg-gray-100">
-            Report a Problem
-          </a>
-          <button onClick={handleLogOut} className="bg-white text-indigo-600 font-bold py-2 px-4 rounded-2xl transition duration-300 hover:bg-gray-100">
-            Log out
-          </button>
-        </div>
-
-        {/* Dropdown menu for smaller screens */}
-        {menuOpen && (
-          <div className="absolute top-8 right-0 bg-white divide-y divide-blue-500 shadow w-44 dark:bg-blue-500 md:hidden">
-            <ul className="py-2 text-sm text-gray-700 dark:text-gray-200">
-              <li>
-                <a href='/home' className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-blue-600 dark:hover:text-white">
-                  Home
-                </a>
-              </li>
-              <li>
-                <a href="/issue-history" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-blue-600 dark:hover:text-white">
-                  Problem History
-                </a>
-              </li>
-              <li>
-                <a href="/issue-form" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-blue-600 dark:hover:text-white">
-                  Report a Problem
-                </a>
-              </li>
-              <li>
-                <button
-                  onClick={handleLogOut}
-                  className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Log out
-                </button>
-              </li>
-            </ul>
-          </div>
-        )}
-
-      </div>
-    </header>
-        </>
+    return (
+        <header className="bg-gradient-to-r from-blue-700 to-blue-500 border-b border-blue-800 shadow-lg sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4">
+                <div className="flex justify-between items-center py-4">
+                    {/* Logo */}
+                    <div className="flex items-center">
+                        <span className="font-bold text-2xl text-white tracking-tight">UIAMS</span>
+                    </div>
+                    
+                    {/* Navigation for desktop */}
+                    <nav className="hidden md:flex items-center space-x-1">
+                        <Link to="/home" className="px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 hover:shadow-md transition duration-150 rounded-md">Home</Link>
+                        <Link to="/issue-history" className="px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 hover:shadow-md transition duration-150 rounded-md">Issue Tracker</Link>
+                        <Link to="/issue-form" className="px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 hover:shadow-md transition duration-150 rounded-md">Report Issue</Link>
+                        
+                        {isAdmin && (
+                            <div className="relative group">
+                                <button className="px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 hover:shadow-md transition duration-150 rounded-md flex items-center">
+                                    Admin
+                                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <div className="absolute left-0 mt-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block">
+                                    <div className="py-1" role="menu" aria-orientation="vertical">
+                                        <Link to="/add-department" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100">Manage Departments</Link>
+                                        <Link to="/register" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100">Manage Employees</Link>
+                                        <Link to="/reports" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100">View Reports</Link>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {isAdmin && (
+                            <div className="relative group">
+                                <button className="px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 hover:shadow-md transition duration-150 rounded-md flex items-center">
+                                    Licenses
+                                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <div className="absolute left-0 mt-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block">
+                                    <div className="py-1" role="menu" aria-orientation="vertical">
+                                        <Link to="/license-upload" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100">Upload License</Link>
+                                        <Link to="/all-licenses" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100">All Licenses</Link>
+                                        <Link to="/expiring-licenses" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100">Expiring Licenses</Link>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <button 
+                            onClick={handleLogOut} 
+                            className="ml-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition duration-150"
+                        >
+                            Logout
+                        </button>
+                    </nav>
+                    
+                    {/* Mobile menu button */}
+                    <div className="md:hidden">
+                        <button 
+                            className="text-white focus:outline-none"
+                            onClick={() => setMenuOpen(!menuOpen)}
+                        >
+                            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {menuOpen ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                )}
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                {/* Mobile menu */}
+                {menuOpen && (
+                    <div className="px-2 pt-2 pb-4 bg-blue-600 md:hidden rounded-b-lg shadow-lg">
+                        <Link to="/home" className="block px-3 py-2 text-white hover:bg-blue-700 rounded mb-1">Home</Link>
+                        <Link to="/issue-history" className="block px-3 py-2 text-white hover:bg-blue-700 rounded mb-1">Issue Tracker</Link>
+                        <Link to="/issue-form" className="block px-3 py-2 text-white hover:bg-blue-700 rounded mb-1">Report Issue</Link>
+                        
+                        {isAdmin && (
+                            <>
+                                <div className="px-3 py-2 text-white font-medium border-t border-blue-500 mt-2 pt-2">Admin</div>
+                                <Link to="/add-department" className="block px-3 py-2 pl-6 text-white hover:bg-blue-700 rounded mb-1">Manage Departments</Link>
+                                <Link to="/register" className="block px-3 py-2 pl-6 text-white hover:bg-blue-700 rounded mb-1">Manage Employees</Link>
+                                <Link to="/reports" className="block px-3 py-2 pl-6 text-white hover:bg-blue-700 rounded mb-1">View Reports</Link>
+                                
+                                <div className="px-3 py-2 text-white font-medium border-t border-blue-500 mt-2 pt-2">Licenses</div>
+                                <Link to="/license-upload" className="block px-3 py-2 pl-6 text-white hover:bg-blue-700 rounded mb-1">Upload License</Link>
+                                <Link to="/all-licenses" className="block px-3 py-2 pl-6 text-white hover:bg-blue-700 rounded mb-1">All Licenses</Link>
+                                <Link to="/expiring-licenses" className="block px-3 py-2 pl-6 text-white hover:bg-blue-700 rounded mb-1">Expiring Licenses</Link>
+                            </>
+                        )}
+                        
+                        <button 
+                            onClick={handleLogOut} 
+                            className="block w-full text-left px-3 py-2 text-white bg-red-600 hover:bg-red-700 rounded mt-3"
+                        >
+                            Logout
+                        </button>
+                    </div>
+                )}
+            </div>
+        </header>
     );
 }
 
-export default Header
+export default Header;

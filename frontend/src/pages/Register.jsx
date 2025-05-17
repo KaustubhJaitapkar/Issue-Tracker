@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import AlertBox from '../components/AlertBox';
-// import { useNavigate } from 'react-router-dom';
+import Header from './Header';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -12,29 +14,39 @@ function Register() {
     email: '',
     password: ''
   });
-
+  
+  const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState([]);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // const navigate = useNavigate();
-
-  // const navigateToAboutPage = () => {
-  //   // navigate('/login');
-  // };
+  const navigateToAboutPage = () => {
+    navigate('/issue-history');
+  };
 
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/api/v1/get-departments', {
+        const accessToken = localStorage.getItem('accessToken');
+        
+        // Use the token in the request headers
+        const res = await axios.get('http://localhost:8000/api/v1/departments', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
           withCredentials: true
         });
-        console.log(res.data);
-        setDepartments(res.data.data); // assuming res.data.data is an array of departments
+        
+        console.log('Departments data:', res.data);
+        if (res.data.data) {
+          setDepartments(res.data.data);
+        }
       } catch (e) {
-        console.log(e);
+        console.error('Error fetching departments:', e);
       }
     };
 
@@ -44,110 +56,170 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     // Handle form submission
     try {
-      const res = await axios.post('http://localhost:8000/api/v1/register', {
+      const accessToken = localStorage.getItem('accessToken');
+      
+      const res = await axios.post('http://localhost:8000/api/v1/users/register', {
         fullName: formData.name,
-        email: formData.email, username: formData.userId, password: formData.password, department: formData.department, phoneNumber: formData.phone
-      }, { withCredentials: true });
+        email: formData.email, 
+        username: formData.userId, 
+        password: formData.password, 
+        department: formData.department, 
+        phoneNumber: formData.phone
+      }, { 
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        withCredentials: true 
+      });
+      
       console.log(res);
-      if (res.data.statusCode == 200) {
-        console.log("Success on login");
+      if (res.data.statusCode === 200 || res.data.statusCode === 201) {
+        console.log("Success on registration");
         AlertBox(1, "User registered successfully!!");
-        // navigateToAboutPage();
+        navigateToAboutPage();
       } else {
-        console.log("Error on login");
+        console.log("Error on registration");
+        AlertBox(2, "Registration failed!");
       }
 
     } catch (e) {
       console.log(e);
-      alert(e);
+      AlertBox(2, e.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
 
 
   return (
-    <div className="flex items-center justify-center h-screen bg-white">
-      <div className="w-full max-w-xs sm:max-w-sm md:max-w-md p-3 sm:p-4 md:p-6 bg-white rounded-lg shadow-2xl border border-blue-700">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-center font-serif text-orange-500 mb-2 md:mb-4">UIAMS</h1>
-        <h2 className="text-base sm:text-lg md:text-xl font-bold text-center font-serif text-blue-600 mb-3 md:mb-5">REGISTER</h2>
-        <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-2">
-          <input
-            type="text"
-            name="name"
-            placeholder="Name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500 my-1"
-          />
-          <input
-            type="text"
-            name="userId"
-            placeholder="User ID"
-            value={formData.userId}
-            onChange={handleChange}
-            className="w-full px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-          />
-          <input
-            type="text"
-            name="phone"
-            placeholder="Phone No."
-            value={formData.phone}
-            onChange={handleChange}
-            className="w-full px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-          />
-          {/* <select
+    <>
+      <Header />
+      <div className="max-w-2xl mx-auto my-10 p-8 bg-white rounded-xl shadow-lg">
+        <h2 className="text-2xl font-bold text-center text-blue-600 mb-8">Register New Employee</h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="Enter full name"
+              />
+            </div>
             
-            name="department"
-            value={formData.department}
-            onChange={handleChange}
-            className="w-full mb-3 sm:mb-4 p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option>Select your department</option>
-            <option>Software</option>
-            <option>Electrician</option>
-            <option>Doctor</option>
-          </select> */}
-
-          <select
-            name="department"
-            value={formData.department}
-            onChange={handleChange}
-            className="w-full mb-3 sm:mb-4 p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="">Select your department</option>
-            {departments.map((dept, idx) => (
-              <option key={idx} value={dept}>
-                {dept.name}
-              </option>
-            ))}
-          </select>
-
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-          />
-          <button
-            type="submit"
-            className="w-full py-2 sm:py-3 md:py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-300 md:text-lg"
-          >
-            Register
-          </button>
+            <div>
+              <label htmlFor="userId" className="block text-sm font-medium text-gray-700 mb-1">
+                User ID
+              </label>
+              <input
+                type="text"
+                id="userId"
+                name="userId"
+                value={formData.userId}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="Create a user ID"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number
+              </label>
+              <input
+                type="text"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="Enter phone number"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
+                Department
+              </label>
+              <select
+                id="department"
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option value="">Select Department</option>
+                {departments && departments.map((dept, idx) => (
+                  <option key={idx} value={dept.department_id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="Enter email address"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="Create a password"
+              />
+            </div>
+          </div>
+          
+          <div className="pt-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full px-4 py-3 text-white font-medium rounded-lg shadow-md 
+                ${loading 
+                  ? 'bg-blue-400 cursor-not-allowed' 
+                  : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-opacity-50 transition-colors duration-300 transform hover:-translate-y-0.5'
+                }`}
+            >
+              {loading ? 'Registering...' : 'Register Employee'}
+            </button>
+          </div>
         </form>
       </div>
-    </div>
+    </>
   );
 };
 

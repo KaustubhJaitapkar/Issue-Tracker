@@ -38,11 +38,14 @@ CREATE TABLE issues (
 );
 
 
-create table licenses(
-	id int Primary key auto_increment,
-    file_name Varchar(255) not null,
-    file_path varchar(255) not null,
-    expiry_date date not null,
+CREATE TABLE licenses (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    file_name VARCHAR(255) NOT NULL,
+    file_data LONGBLOB NOT NULL,
+    file_type VARCHAR(50) NOT NULL,
+    expiry_date DATE NOT NULL,
     department_id INT,
-    foreign key (department_id) references departments(department_id)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE CASCADE
 );

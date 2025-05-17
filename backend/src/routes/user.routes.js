@@ -31,6 +31,7 @@ import {
     checkDepartmentType,
     fetchMentainanceDeparments,
     getAllDepartments,
+    getPublicDepartments
 } from "../controllers/department.controllers.js";
 
 
@@ -41,6 +42,9 @@ const router = Router()
 
 // Public routes - only login is public
 router.route("/login").post(loginUser)
+
+// Public route to get departments for registration
+router.route("/departments").get(verifyJWT,getPublicDepartments)
 
 // Secured routes (for all authenticated users)
 router.route("/logout").post(verifyJWT, logoutUser)
@@ -93,7 +97,7 @@ router.route("/departments").get(verifyJWT, isAdmin, (req, res) => {
 router.get('/get-departments', verifyJWT, isAdmin, getAllDepartments);
 
 // Admin user management routes
-router.route("/users/create").post(verifyJWT, isAdmin, adminCreateUser);
+router.route("/users/register").post(verifyJWT, isAdmin, adminCreateUser);
 router.route("/users").get(verifyJWT, isAdmin, adminGetAllUsers);
 router.route("/users/:userId").put(verifyJWT, isAdmin, adminUpdateUser);
 router.route("/users/:userId").delete(verifyJWT, isAdmin, adminDeleteUser);
