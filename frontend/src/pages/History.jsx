@@ -14,6 +14,7 @@ function History(issues) {
   const [hasChanged, setHasChanged] = useState(true);
   const [taskChanged, setTaskChanged] = useState(true);
   const [completingTasks, setCompletingTasks] = useState({});
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, taskId: null });
 
   const navigate = useNavigate()
 
@@ -86,7 +87,16 @@ function History(issues) {
       });
   }, [hasChanged,taskChanged]);
 
+  const showConfirmDialog = (taskId) => {
+    setConfirmDialog({ isOpen: true, taskId });
+  };
+
+  const hideConfirmDialog = () => {
+    setConfirmDialog({ isOpen: false, taskId: null });
+  };
+
   const handleComplete = async (taskId) => {
+    hideConfirmDialog();
     const accessToken = localStorage.getItem('accessToken');
 
     // Mark the task as completing
@@ -223,7 +233,7 @@ function History(issues) {
                             <p className="text-gray-600 max-sm:text-sm text-left ">Description: {task.description}</p>
                           </div>
                           <button
-                            onClick={() => handleComplete(task.id)}
+                            onClick={() => showConfirmDialog(task.id)}
                             disabled={completingTasks[task.id] === 'loading' || completingTasks[task.id] === 'completed'}
                             className={`px-4 py-2 rounded-lg max-sm:px-2 max-sm:py-1 ${
                               completingTasks[task.id] === 'completed' 
@@ -253,6 +263,30 @@ function History(issues) {
               </div>
             </div>
           </div>
+
+          {/* Confirmation Dialog */}
+          {confirmDialog.isOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md mx-4">
+                <h3 className="text-xl font-semibold mb-4">Confirm Completion</h3>
+                <p className="mb-6">Are you sure you want to mark this issue as completed? This action cannot be undone.</p>
+                <div className="flex justify-end space-x-4">
+                  <button 
+                    onClick={hideConfirmDialog}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={() => handleComplete(confirmDialog.taskId)}
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
         
       </div>
