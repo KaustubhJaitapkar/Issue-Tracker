@@ -4,7 +4,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "80:9563"
     depends_on:
       - backend
     environment:
@@ -22,7 +22,7 @@ services:
       - db
     environment:
       - PORT=8000
-      - CORS_ORIGIN=*
+      - CORS_ORIGIN=http://localhost:80
       - DB_HOST=db
       - DB_USER=root
       - DB_PASSWORD=490404
