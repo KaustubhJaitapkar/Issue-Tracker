@@ -59,6 +59,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Change password function
+  const changePassword = async (oldPassword, newPassword) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      
+      const response = await axios.post('http://localhost:8000/api/v1/change-password', 
+        { 
+          oldPassword, 
+          newPassword 
+        }, 
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          withCredentials: true
+        }
+      );
+      
+      if (response.data.statusCode === 200) {
+        return { success: true, message: "Password changed successfully" };
+      } else {
+        return { success: false, message: response.data.message || "Password change failed" };
+      }
+    } catch (error) {
+      console.error("Password change error:", error);
+      return { 
+        success: false, 
+        message: error.response?.data?.message || "Invalid old password or server error" 
+      };
+    }
+  };
+
   // Logout function
   const logout = async () => {
     try {
@@ -91,7 +123,8 @@ export const AuthProvider = ({ children }) => {
     isAdmin,
     isLoading,
     login,
-    logout
+    logout,
+    changePassword
   };
 
   return (

@@ -13,6 +13,7 @@ function History(issues) {
   const [toResolvetasks, setToResolvetasks] = useState([]);
   const [hasChanged, setHasChanged] = useState(true);
   const [taskChanged, setTaskChanged] = useState(true);
+  const [completingTasks, setCompletingTasks] = useState({});
 
   const navigate = useNavigate()
 
@@ -88,6 +89,12 @@ function History(issues) {
   const handleComplete = async (taskId) => {
     const accessToken = localStorage.getItem('accessToken');
 
+    // Mark the task as completing
+    setCompletingTasks(prev => ({
+      ...prev,
+      [taskId]: 'loading'
+    }));
+
     try {
       await axios.post('http://localhost:8000/api/v1/complete-report', {
         issueId: taskId
@@ -99,10 +106,26 @@ function History(issues) {
         withCredentials: true
       });
 
+      // Mark the task as completed
+      setCompletingTasks(prev => ({
+        ...prev,
+        [taskId]: 'completed'
+      }));
+      
+      // Update the task list
       setTaskChanged(!taskChanged);
+      
+      // Show success message
+      AlertBox(1, "Issue marked as complete successfully!");
     } catch (error) {
-      e => { navigate("/") }
+      // Reset the completing state if there's an error
+      setCompletingTasks(prev => ({
+        ...prev,
+        [taskId]: 'error'
+      }));
+      
       console.error('Error completing the task:', error);
+      AlertBox(2, "Error completing the issue. Please try again.");
     }
   };
 
@@ -201,9 +224,24 @@ function History(issues) {
                           </div>
                           <button
                             onClick={() => handleComplete(task.id)}
-                            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 max-sm:px-2 max-sm:py-1"
+                            disabled={completingTasks[task.id] === 'loading' || completingTasks[task.id] === 'completed'}
+                            className={`px-4 py-2 rounded-lg max-sm:px-2 max-sm:py-1 ${
+                              completingTasks[task.id] === 'completed' 
+                                ? 'bg-blue-500 text-white cursor-not-allowed' 
+                                : completingTasks[task.id] === 'loading'
+                                  ? 'bg-gray-400 text-white cursor-wait'
+                                  : completingTasks[task.id] === 'error'
+                                    ? 'bg-red-500 text-white hover:bg-red-600'
+                                    : 'bg-green-500 text-white hover:bg-green-600'
+                            }`}
                           >
-                            Completed
+                            {completingTasks[task.id] === 'completed' 
+                              ? 'Completed ✓' 
+                              : completingTasks[task.id] === 'loading' 
+                                ? 'Processing...' 
+                                : completingTasks[task.id] === 'error'
+                                  ? 'Try Again'
+                                  : 'Completed'}
                           </button>
                         </div>
                       </li>

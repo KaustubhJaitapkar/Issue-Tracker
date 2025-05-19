@@ -129,12 +129,35 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
 
+    if (!oldPassword || !newPassword) {
+        throw new ApiError(400, "Old password and new password are required");
+    }
+
+    if (newPassword.length < 6) {
+        throw new ApiError(400, "New password must be at least 6 characters long");
+    }
+
     const connection = await getConnection();
-    const [user] = await connection.query("SELECT * FROM users WHERE id = ?", [req.user.id]);
+    const [users] = await connection.query("SELECT * FROM users WHERE id = ?", [req.user.id]);
+    
+    if (users.length === 0) {
+        throw new ApiError(404, "User not found");
+    }
+    
+    const user = users[0];
 
-    if (user.password !== oldPassword) throw new ApiError(400, "Invalid old password");
+    // Compare provided old password with stored hashed password
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordValid) {
+        throw new ApiError(400, "Current password is incorrect");
+    }
 
-    await connection.query("UPDATE users SET password = ? WHERE id = ?", [newPassword, req.user.id]);
+    // Hash the new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update with the hashed new password
+    await connection.query("UPDATE users SET password = ? WHERE id = ?", [hashedNewPassword, req.user.id]);
+    
     res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"));
 });
 
@@ -342,6 +365,11 @@ const adminUpdateUser = asyncHandler(async (req, res) => {
 const adminDeleteUser = asyncHandler(async (req, res) => {
     const { userId } = req.params;
     
+    // Check if admin is trying to delete themselves
+    if (req.user.id === userId) {
+        throw new ApiError(403, "Administrators cannot delete their own accounts");
+    }
+    
     const connection = await getConnection();
     
     // Check if user exists
@@ -358,6 +386,39 @@ const adminDeleteUser = asyncHandler(async (req, res) => {
     );
 });
 
+// Admin: Reset user password
+const adminResetPassword = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { newPassword } = req.body;
+
+    // Validate input
+    if (!userId || !newPassword) {
+        throw new ApiError(400, "User ID and new password are required");
+    }
+
+    if (newPassword.length < 6) {
+        throw new ApiError(400, "Password must be at least 6 characters long");
+    }
+
+    const connection = await getConnection();
+    
+    // Check if user exists
+    const [userExists] = await connection.query("SELECT * FROM users WHERE id = ?", [userId]);
+    if (userExists.length === 0) {
+        throw new ApiError(404, "User not found");
+    }
+    
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update the user's password
+    await connection.query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, userId]);
+    
+    res.status(200).json(
+        new ApiResponse(200, { userId }, "User password reset successfully")
+    );
+});
+
 export {
     loginUser,
     logoutUser,
@@ -370,4 +431,5 @@ export {
     adminGetAllUsers,
     adminUpdateUser,
     adminDeleteUser,
+    adminResetPassword,
 };

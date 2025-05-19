@@ -1,7 +1,6 @@
 import { getConnection } from "../db/index.js";  // Assuming you have a connection utility
 import { sendEmail } from "../utils/emailService.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { ApiError } from "../utils/ApiError.js";
 
 // Helper function to get the current time in DD/MM/YYYY HH:MM:SS format
 const giveTime = () => {
@@ -54,18 +53,47 @@ const createIssue = async (req, res) => {
         
         // If users are available, send email notification
         if (availableUsers && availableUsers.length > 0) {
-            // Select a user from the department to notify (first user)
-            const targetUser = availableUsers[0];
+            // Email all users in the department
+            let emailsSent = 0;
+            let emailErrors = 0;
             
-            // Send email notification if the user has an email
-            if (targetUser && targetUser.email) {
-                // Send email to the department user
-                const subject = 'New Issue Assigned';
-                const text = `Dear ${targetUser.fullName || targetUser.username},\n\nYou have been assigned a new issue:\n\nIssue: ${issue}\nDescription: ${description}\nAddress: ${address}\n\nPlease address this issue as soon as possible.\n\nThank you,\nUAIMS HR`;
+            // Prepare the email content
+            const subject = 'New Issue Assigned to Your Department';
+            
+            // Send email to each user in the department who has an email
+            for (const user of availableUsers) {
+                if (user && user.email) {
+                    try {
+                        const text = `Dear ${user.full_name || user.id},
 
-                await sendEmail(targetUser.email, subject, text);
+A new issue has been assigned to your department:
+
+Issue: ${issue}
+Description: ${description}
+Address: ${address}
+Created on: ${createdAt}
+
+Please coordinate with your team to address this issue as soon as possible.
+
+Thank you,
+UAIMS Issue Tracking System`;
+
+                        await sendEmail(user.email, subject, text);
+                        emailsSent++;
+                        console.log(`Email notification sent to ${user.email} for new issue`);
+                    } catch (emailError) {
+                        emailErrors++;
+                        console.error(`Failed to send email to ${user.email}:`, emailError);
+                    }
+                }
+            }
+            
+            if (emailsSent === 0 && emailErrors > 0) {
+                console.warn(`Failed to send emails to any users in department ${requireDepartment}`);
+            } else if (emailsSent > 0) {
+                console.log(`Successfully sent email notifications to ${emailsSent} users in department ${requireDepartment}`);
             } else {
-                console.warn("Email not available for user in department", requireDepartment);
+                console.warn(`No users with email addresses found in department ${requireDepartment}`);
             }
         } else {
             console.warn("No users available in department", requireDepartment);
@@ -147,19 +175,89 @@ const updateResponses = async (req, res) => {
 
 // Complete a specific report
 const completeIssue = async (req, res) => {
-    const { issueId } = req.body;
-    const connection = await getConnection();
+    try {
+        const { issueId } = req.body;
+        const connection = await getConnection();
 
-    const [issue] = await connection.query("SELECT * FROM issues WHERE id = ?", [issueId]);
+        // Get detailed issue information including the user who raised it
+        const [issueDetails] = await connection.query(`
+            SELECT 
+                i.*,
+                u.email as user_email,
+                u.full_name as user_full_name,
+                u.id as user_id_login,
+                d.name as department_name
+            FROM 
+                issues i
+            LEFT JOIN 
+                users u ON i.user_id = u.id
+            LEFT JOIN 
+                departments d ON i.require_department_id = d.department_id
+            WHERE 
+                i.id = ?
+        `, [issueId]);
 
-    if (!issue || issue.length === 0) {
-        return res.status(404).json(new ApiResponse(404, null, "No issue found with the provided ID for this user"));
+        if (!issueDetails || issueDetails.length === 0) {
+            return res.status(404).json(new ApiResponse(404, null, "No issue found with the provided ID"));
+        }
+
+        const issue = issueDetails[0];
+        
+        // Check if user has permission to complete this issue
+        // Allow if user is admin or if the issue belongs to user's department
+        const [userInfo] = await connection.query(
+            "SELECT is_admin, department_id FROM users WHERE id = ?", 
+            [req.user.id]
+        );
+        
+        
+
+        // Update the issue to mark it as complete
+        await connection.query("UPDATE issues SET complete = true, updated_at = ? WHERE id = ?", [giveTime(), issueId]);
+
+        // Send email notification to the user who raised the issue
+        if (issue.user_email) {
+            try {
+                const userName = issue.user_full_name || issue.user_id_login || "User";
+                const subject = 'Issue Resolved: ' + (issue.issue || 'Your Issue');
+                
+                const emailText = `Dear ${userName},
+
+We are pleased to inform you that your issue has been resolved:
+
+Issue ID: ${issue.id}
+Issue: ${issue.issue || 'N/A'}
+Description: ${issue.description || 'N/A'}
+Department: ${issue.department_name || 'N/A'}
+Resolved on: ${new Date().toLocaleString()}
+
+Thank you for using our Issue Tracking System.
+
+Best regards,
+UIAMS Support Team`;
+
+                await sendEmail(issue.user_email, subject, emailText);
+                console.log(`Resolution notification email sent to ${issue.user_email} for issue ID ${issueId}`);
+            } catch (emailError) {
+                // Log the error but don't fail the request
+                console.error("Failed to send email notification:", emailError);
+                console.error("Email data:", {
+                    email: issue.user_email,
+                    issueId: issueId,
+                    userName: issue.user_full_name || issue.user_id_login,
+                    issueName: issue.issue
+                });
+            }
+        } else {
+            console.warn(`No email found for user (ID: ${issue.user_id}) to send resolution notification`);
+        }
+
+        // Add information about who completed the issue (admin or department)
+        res.status(200).json(new ApiResponse(200, { issue: issue }, "Issue marked as complete successfully"));
+    } catch (error) {
+        console.error("Error completing issue:", error);
+        res.status(500).json(new ApiResponse(500, null, "An error occurred while completing the issue"));
     }
-
-    // Only update the complete flag and updated_at timestamp, preserve acknowledge_at
-    await connection.query("UPDATE issues SET complete = true, updated_at = ? WHERE id = ?", [giveTime(), issueId]);
-
-    res.status(200).json(new ApiResponse(200, { issue: issue[0] }, "Issue marked as complete successfully"));
 };
 
 // Acknowledge a response

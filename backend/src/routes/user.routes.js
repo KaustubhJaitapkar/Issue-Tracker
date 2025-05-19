@@ -9,7 +9,8 @@ import {
     adminCreateUser,
     adminGetAllUsers,
     adminUpdateUser,
-    adminDeleteUser
+    adminDeleteUser,
+    adminResetPassword
 } from "../controllers/user.controllers.js";
 
 
@@ -31,7 +32,8 @@ import {
     checkDepartmentType,
     fetchMentainanceDeparments,
     getAllDepartments,
-    getPublicDepartments
+    getPublicDepartments,
+    editDepartment
 } from "../controllers/department.controllers.js";
 
 
@@ -79,7 +81,7 @@ router.route("/get-admin").get(verifyJWT, getAdmin)
 
 // Public department information routes (for all users)
 router.get('/department/:name', checkDepartmentType);
-router.get('/department-names', fetchMentainanceDeparments);
+router.get('/department-names', verifyJWT, fetchMentainanceDeparments);
 
 // Admin dashboard route
 router.route("/dashboard").get(verifyJWT, isAdmin, (req, res) => {
@@ -90,6 +92,7 @@ router.route("/dashboard").get(verifyJWT, isAdmin, (req, res) => {
 router.post('/departments', verifyJWT, isAdmin, addDepartment);
 router.delete('/departments/:departmentId', verifyJWT, isAdmin, deleteDepartment);
 router.put('/departments/:departmentId/type', verifyJWT, isAdmin, updateDepartmentType);
+router.put('/departments/:departmentId', verifyJWT, isAdmin, editDepartment);
 router.route("/departments").get(verifyJWT, isAdmin, (req, res) => {
     return res.status(200).json({ message: "Admin can manage all departments" });
 })
@@ -101,5 +104,6 @@ router.route("/users/register").post(verifyJWT, isAdmin, adminCreateUser);
 router.route("/users").get(verifyJWT, isAdmin, adminGetAllUsers);
 router.route("/users/:userId").put(verifyJWT, isAdmin, adminUpdateUser);
 router.route("/users/:userId").delete(verifyJWT, isAdmin, adminDeleteUser);
+router.route("/users/:userId/reset-password").post(verifyJWT, isAdmin, adminResetPassword);
 
 export default router

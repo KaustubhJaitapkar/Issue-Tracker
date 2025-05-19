@@ -64,7 +64,7 @@ const getAllLicenses = asyncHandler(async (req, res) => {
 // Get expiring licenses (expiring in next 5 days)
 const getExpiringLicenses = asyncHandler(async (req, res) => {
     const today = new Date();
-    today.setDate(today.getDate() + 5); // Get date 5 days ahead
+    today.setDate(today.getDate() + 15); // Get date 5 days ahead
     const expiryDate = today.toISOString().split('T')[0];
     
     const connection = getConnection();
@@ -201,7 +201,7 @@ const deleteLicense = asyncHandler(async (req, res) => {
 const checkAndNotifyExpiringLicenses = asyncHandler(async () => {
     try {
         const today = new Date();
-        today.setDate(today.getDate() + 5); // Get date 5 days ahead
+        today.setDate(today.getDate() + 15); // Get date 15 days ahead
         const expiryDate = today.toISOString().split('T')[0];
         
         const connection = getConnection();

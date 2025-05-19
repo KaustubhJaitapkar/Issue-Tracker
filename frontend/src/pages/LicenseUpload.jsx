@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import Header from './Header';
@@ -11,6 +11,8 @@ const LicenseUpload = () => {
     const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [dragActive, setDragActive] = useState(false);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         fetchLicenses();
@@ -64,6 +66,42 @@ const LicenseUpload = () => {
             };
             reader.onerror = (error) => reject(error);
         });
+    };
+
+    // Handle drag events
+    const handleDrag = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActive(true);
+        } else if (e.type === "dragleave") {
+            setDragActive(false);
+        }
+    };
+
+    // Handle drop event
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            const droppedFile = e.dataTransfer.files[0];
+            setFile(droppedFile);
+        }
+    };
+
+    // Trigger file input click
+    const handleButtonClick = () => {
+        fileInputRef.current.click();
+    };
+
+    // Handle file input change
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setFile(e.target.files[0]);
+        }
     };
 
     const handleUpload = async (e) => {
@@ -235,13 +273,47 @@ const LicenseUpload = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     License File (PDF or PNG only)
                                 </label>
-                                <input
-                                    type="file"
-                                    accept=".pdf,.png"
-                                    onChange={(e) => setFile(e.target.files[0])}
-                                    required
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                />
+                                <div 
+                                    className={`relative w-full h-32 border-2 border-dashed rounded-md flex flex-col items-center justify-center cursor-pointer ${
+                                        dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+                                    }`}
+                                    onDragEnter={handleDrag}
+                                    onDragOver={handleDrag}
+                                    onDragLeave={handleDrag}
+                                    onDrop={handleDrop}
+                                    onClick={handleButtonClick}
+                                >
+                                    <input 
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept=".pdf,.png"
+                                        onChange={handleFileChange}
+                                        className="hidden"
+                                        required={!file}
+                                    />
+                                    
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                    </svg>
+                                    
+                                    {file ? (
+                                        <p className="mt-2 text-sm text-gray-700 font-medium">
+                                            Selected: {file.name}
+                                        </p>
+                                    ) : (
+                                        <>
+                                            <p className="mt-2 text-sm text-gray-700 font-medium">
+                                                Drag & Drop your file here
+                                            </p>
+                                            <p className="text-xs text-gray-500">
+                                                or click to browse files
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Only PDF and PNG files are accepted
+                                </p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -250,6 +322,7 @@ const LicenseUpload = () => {
                                 <input
                                     type="date"
                                     onChange={(e) => setExpiryDate(e.target.value)}
+                                    value={expiryDate}
                                     required
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                 />

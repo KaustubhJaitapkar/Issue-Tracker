@@ -1,12 +1,16 @@
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import dotenv from "dotenv"
 import { ApiError } from "./utils/ApiError.js"
 import cron from "node-cron"
 import { checkAndNotifyExpiringLicenses } from "./controllers/license.controllers.js"
 
+// Load environment variables
+dotenv.config()
+
 const app = express()
-let allowUrls = "*"
+let allowUrls = process.env.CORS_ORIGIN || "*"
 
 // Increase payload size limit for file uploads
 app.use(express.json({ limit: "50mb" }))
