@@ -296,7 +296,7 @@ const UserManagement = () => {
                       </option>
                     ))}
                   </select>
-                  {formData.isAdmin === true ? (
+                  {formData.isAdmin ? (
                     <p className="mt-1 text-xs text-gray-500">Department not required for admin users</p>
                   ) : null}
                 </div>
