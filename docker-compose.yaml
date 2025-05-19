@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build:
@@ -50,9 +48,15 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=490404
       - MYSQL_DATABASE=issueTracker
+      - MYSQL_TCP_PORT=3306
     volumes:
       - mysql-data:/var/lib/mysql
       - ./backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p490404"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 
