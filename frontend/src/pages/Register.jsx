@@ -41,7 +41,7 @@ function Register() {
         const accessToken = localStorage.getItem('accessToken');
         
         // Use the token in the request headers
-        const res = await axios.get('http://localhost:8000/api/v1/departments', {
+        const res = await axios.get('https://issue-tracker-lppf.onrender.com/api/v1/departments', {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -75,7 +75,7 @@ function Register() {
         return;
       }
       
-      const res = await axios.post('http://localhost:8000/api/v1/users/register', {
+      const res = await axios.post('https://issue-tracker-lppf.onrender.com/api/v1/users/register', {
         fullName: formData.name,
         email: formData.email, 
         username: formData.userId, 

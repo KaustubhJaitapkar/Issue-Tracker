@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (username, password) => {
     try {
-      const res = await axios.post('http://localhost:8000/api/v1/login', {
+      const res = await axios.post('https://issue-tracker-lppf.onrender.com/api/v1/login', {
         username,
         password
       }, { withCredentials: true });
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const accessToken = localStorage.getItem('accessToken');
       
-      const response = await axios.post('http://localhost:8000/api/v1/change-password', 
+      const response = await axios.post('https://issue-tracker-lppf.onrender.com/api/v1/change-password', 
         { 
           oldPassword, 
           newPassword 
@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const accessToken = localStorage.getItem('accessToken');
       
-      await axios.post('http://localhost:8000/api/v1/logout', {}, {
+      await axios.post('https://issue-tracker-lppf.onrender.com/api/v1/logout', {}, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },

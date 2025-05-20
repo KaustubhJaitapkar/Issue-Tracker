@@ -32,7 +32,7 @@ const UserManagement = () => {
     setFetchLoading(true);
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await axios.get('http://localhost:8000/api/v1/users', {
+      const response = await axios.get('https://issue-tracker-lppf.onrender.com/api/v1/users', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -53,7 +53,7 @@ const UserManagement = () => {
   const fetchDepartments = async () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await axios.get('http://localhost:8000/api/v1/departments', {
+      const response = await axios.get('https://issue-tracker-lppf.onrender.com/api/v1/departments', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -116,7 +116,7 @@ const UserManagement = () => {
         }
         
         // Update existing user
-        await axios.put(`http://localhost:8000/api/v1/users/${currentUserId}`, updateData, { 
+        await axios.put(`https://issue-tracker-lppf.onrender.com/api/v1/users/${currentUserId}`, updateData, { 
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -195,7 +195,7 @@ const UserManagement = () => {
     
     try {
       const accessToken = localStorage.getItem('accessToken');
-      await axios.delete(`http://localhost:8000/api/v1/users/${userId}`, {
+      await axios.delete(`https://issue-tracker-lppf.onrender.com/api/v1/users/${userId}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },

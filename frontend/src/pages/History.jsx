@@ -24,7 +24,7 @@ function History(issues) {
   //   console.log(accessToken);
 
 
-  //   axios.get('http://localhost:8000/api/v1/protected-route', {
+  //   axios.get('https://issue-tracker-lppf.onrender.com/api/v1/protected-route', {
   //     headers: {
   //       Authorization: `Bearer ${accessToken}`,  
   //   }, 
@@ -54,7 +54,7 @@ function History(issues) {
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
 
-    axios.get('http://localhost:8000/api/v1/get-issue-for-user', {
+    axios.get('https://issue-tracker-lppf.onrender.com/api/v1/get-issue-for-user', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -72,7 +72,7 @@ function History(issues) {
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
 
-    axios.get('http://localhost:8000/api/v1/get-issue', {
+    axios.get('https://issue-tracker-lppf.onrender.com/api/v1/get-issue', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       }, withCredentials: true
@@ -106,7 +106,7 @@ function History(issues) {
     }));
 
     try {
-      await axios.post('http://localhost:8000/api/v1/complete-report', {
+      await axios.post('https://issue-tracker-lppf.onrender.com/api/v1/complete-report', {
         issueId: taskId
       }, {
         headers: {
@@ -146,7 +146,7 @@ function History(issues) {
     console.log('Task ID:', taskId);
     
     try {
-      await axios.post('http://localhost:8000/api/v1/acknowledge-time', {
+      await axios.post('https://issue-tracker-lppf.onrender.com/api/v1/acknowledge-time', {
         responseId: taskId
       }, {
         headers: {

@@ -24,7 +24,7 @@ const ExpiringLicenses = () => {
         try {
             const accessToken = localStorage.getItem('accessToken');
             
-            const res = await axios.get('http://localhost:8000/api/v1/departments', {
+            const res = await axios.get('https://issue-tracker-lppf.onrender.com/api/v1/departments', {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 },
@@ -42,7 +42,7 @@ const ExpiringLicenses = () => {
         try {
             const accessToken = localStorage.getItem('accessToken');
             
-            const response = await axios.get('http://localhost:8000/api/v1/licenses/expiring', {
+            const response = await axios.get('https://issue-tracker-lppf.onrender.com/api/v1/licenses/expiring', {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 },
@@ -116,7 +116,7 @@ const ExpiringLicenses = () => {
             }
             
             // Send request to update license with Authorization header
-            await axios.put(`http://localhost:8000/api/v1/licenses/${id}`, requestData, {
+            await axios.put(`https://issue-tracker-lppf.onrender.com/api/v1/licenses/${id}`, requestData, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 },
@@ -145,7 +145,7 @@ const ExpiringLicenses = () => {
         try {
             const accessToken = localStorage.getItem('accessToken');
             
-            await axios.delete(`http://localhost:8000/api/v1/licenses/${licenseId}`, {
+            await axios.delete(`https://issue-tracker-lppf.onrender.com/api/v1/licenses/${licenseId}`, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 },
@@ -193,7 +193,7 @@ const ExpiringLicenses = () => {
                             iframe.style.border = 'none';
                             
                             // Create a fetch request with the proper auth header
-                            fetch(\`http://localhost:8000/api/v1/licenses/${licenseId}\`, {
+                            fetch(\`https://issue-tracker-lppf.onrender.com/api/v1/licenses/${licenseId}\`, {
                                 headers: {
                                     'Authorization': \`Bearer ${accessToken}\`
                                 }

@@ -14,7 +14,7 @@ function Reports() {
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
 
-    axios.get('http://localhost:8000/api/v1/fetch-report', {
+    axios.get('https://issue-tracker-lppf.onrender.com/api/v1/fetch-report', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

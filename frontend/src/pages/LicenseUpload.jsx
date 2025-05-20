@@ -23,7 +23,7 @@ const LicenseUpload = () => {
         try {
             const accessToken = localStorage.getItem('accessToken');
             
-            const res = await axios.get('http://localhost:8000/api/v1/departments', {
+            const res = await axios.get('https://issue-tracker-lppf.onrender.com/api/v1/departments', {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 },
@@ -41,7 +41,7 @@ const LicenseUpload = () => {
         try {
             const accessToken = localStorage.getItem('accessToken');
             
-            const res = await axios.get('http://localhost:8000/api/v1/licenses/all', {
+            const res = await axios.get('https://issue-tracker-lppf.onrender.com/api/v1/licenses/all', {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 },
@@ -139,7 +139,7 @@ const LicenseUpload = () => {
             };
             
             // Send request to API with Authorization header
-            await axios.post('http://localhost:8000/api/v1/licenses/upload', requestData, {
+            await axios.post('https://issue-tracker-lppf.onrender.com/api/v1/licenses/upload', requestData, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 },
@@ -199,7 +199,7 @@ const LicenseUpload = () => {
                             iframe.style.border = 'none';
                             
                             // Create a fetch request with the proper auth header
-                            fetch(\`http://localhost:8000/api/v1/licenses/${licenseId}\`, {
+                            fetch(\`https://issue-tracker-lppf.onrender.com/api/v1/licenses/${licenseId}\`, {
                                 headers: {
                                     'Authorization': \`Bearer ${accessToken}\`
                                 }
@@ -242,7 +242,7 @@ const LicenseUpload = () => {
         try {
             const accessToken = localStorage.getItem('accessToken');
             
-            await axios.delete(`http://localhost:8000/api/v1/licenses/${licenseId}`, {
+            await axios.delete(`https://issue-tracker-lppf.onrender.com/api/v1/licenses/${licenseId}`, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 },

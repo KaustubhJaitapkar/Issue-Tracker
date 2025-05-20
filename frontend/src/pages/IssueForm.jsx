@@ -41,7 +41,7 @@ function IssueForm() {
     }
 
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/raise-issue',
+      const response = await axios.post('https://issue-tracker-lppf.onrender.com/api/v1/raise-issue',
         formData,
         {
           headers: {
@@ -90,7 +90,7 @@ function IssueForm() {
       }
 
       try {
-        const response = await axios.get('http://localhost:8000/api/v1/department-names',
+        const response = await axios.get('https://issue-tracker-lppf.onrender.com/api/v1/department-names',
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,

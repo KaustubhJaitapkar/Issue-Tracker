@@ -23,7 +23,7 @@ const DepartmentForm = () => {
     setFetchLoading(true);
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await axios.get("http://localhost:8000/api/v1/departments", {
+      const response = await axios.get("https://issue-tracker-lppf.onrender.com/api/v1/departments", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -50,7 +50,7 @@ const DepartmentForm = () => {
       
       if (editMode) {
         // Update existing department
-        await axios.put(`http://localhost:8000/api/v1/departments/${currentDepartmentId}`, 
+        await axios.put(`https://issue-tracker-lppf.onrender.com/api/v1/departments/${currentDepartmentId}`, 
           {
             name,
             type,
@@ -66,7 +66,7 @@ const DepartmentForm = () => {
         AlertBox(1, "Department updated successfully");
       } else {
         // Add new department
-        await axios.post("http://localhost:8000/api/v1/departments", 
+        await axios.post("https://issue-tracker-lppf.onrender.com/api/v1/departments", 
           {
             name,
             type,
@@ -118,7 +118,7 @@ const DepartmentForm = () => {
     
     try {
       const accessToken = localStorage.getItem('accessToken');
-      await axios.delete(`http://localhost:8000/api/v1/departments/${departmentId}`, {
+      await axios.delete(`https://issue-tracker-lppf.onrender.com/api/v1/departments/${departmentId}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
