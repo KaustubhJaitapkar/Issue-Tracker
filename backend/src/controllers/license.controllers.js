@@ -69,7 +69,7 @@ const getExpiringLicenses = asyncHandler(async (req, res) => {
     const connection = getConnection();
     const [licenses] = await connection.execute(
         'SELECT l.id, l.file_name, l.file_type, l.department_id, d.name AS department_name, ' +
-        'DATE_FORMAT(l.expiry_date, "%d-%m-%Y") AS expiry_date ' +
+        'DATE_FORMAT(l.expiry_date, \'%d-%m-%Y\') AS expiry_date ' +
         'FROM licenses l ' +
         'LEFT JOIN departments d ON l.department_id = d.department_id ' +
         'WHERE l.expiry_date <= ? ' +
@@ -207,7 +207,7 @@ const checkAndNotifyExpiringLicenses = asyncHandler(async () => {
         // Fetch all licenses expiring in 5 days with department names
         const [licenses] = await connection.execute(
             'SELECT l.file_name, l.department_id, d.name AS department_name, ' +
-            'DATE_FORMAT(l.expiry_date, "%d-%m-%Y") AS expiry_date ' +
+            'DATE_FORMAT(l.expiry_date, \'%d-%m-%Y\') AS expiry_date ' +
             'FROM licenses l ' +
             'LEFT JOIN departments d ON l.department_id = d.department_id ' +
             'WHERE l.expiry_date <= ?',
