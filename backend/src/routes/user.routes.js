@@ -106,4 +106,8 @@ router.route("/users/:userId").put(verifyJWT, isAdmin, adminUpdateUser);
 router.route("/users/:userId").delete(verifyJWT, isAdmin, adminDeleteUser);
 router.route("/users/:userId/reset-password").post(verifyJWT, isAdmin, adminResetPassword);
 
+router.get('/ping', (req, res) => {
+    return res.status(200).json({ message: "Server is running" });
+});
+
 export default router
