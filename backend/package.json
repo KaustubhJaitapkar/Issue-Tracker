@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
     "create-admin": "node src/scripts/createInitialAdmin.js"
   },
   "author": "Tanmay Kaustubh Ritesh",
