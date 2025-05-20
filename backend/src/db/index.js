@@ -10,6 +10,7 @@ const connectDB = async () => {
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: DB_NAME,
+      port: process.env.DB_PORT,
     });
     console.log(`MySQL connected! DB HOST: ${process.env.DB_HOST}`);
   } catch (error) {
