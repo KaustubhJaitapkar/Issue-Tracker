@@ -10,7 +10,7 @@ import { checkAndNotifyExpiringLicenses } from "./controllers/license.controller
 dotenv.config()
 
 const app = express()
-let corsOrigin = process.env.CORS_ORIGIN || "http://localhost:80"
+let corsOrigin = process.env.CORS_ORIGIN || "http://localhost:5173"
 
 // Increase payload size limit for file uploads
 app.use(express.json({ limit: "50mb" }))
@@ -25,8 +25,6 @@ app.use(
   })
 );
 
-// Add OPTIONS handling for preflight requests
-app.options('*', cors());
 
 app.use(express.static("public"))
 app.use(cookieParser())
